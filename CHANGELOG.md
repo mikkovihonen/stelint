@@ -6,10 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.1.6] - 2026-08-10
-
-- CI pipeline change
-
 ## [0.1.5] - 2026-08-10
 
 - Fix sense2vec installation: use STELINT_S2V_PATH env var with manual extraction
