@@ -51,9 +51,15 @@ jobs:
       - name: Run tests with coverage
         run: uv run pytest --cov=stelint --cov-report=term-missing --cov-report=xml -v
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        if: github.event_name == 'push'
-        with:
-          files: coverage.xml
-          fail_ci_if_error: false
+      - name: Generate coverage badge
+        run: uv run python3 .github/workflows/scripts/generate_coverage_badge.py
+
+      - name: Commit coverage badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git add -f docs/assets/
+          git diff --cached --quiet || git commit -m 'Update coverage badge'
+          git push
