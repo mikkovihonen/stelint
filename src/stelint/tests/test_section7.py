@@ -1,18 +1,9 @@
 """Tests for Section 7 (Safety instructions) checks."""
 
-import pytest
-import spacy
-
 from stelint.checks_section7 import (
     check_safety_instruction_explanation,
     check_safety_instruction_format,
 )
-
-
-@pytest.fixture
-def nlp_model():
-    """Load spaCy model once for all tests."""
-    return spacy.load("en_core_web_sm")
 
 
 class TestCheckSafetyInstructionFormat:

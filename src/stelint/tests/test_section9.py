@@ -1,8 +1,5 @@
 """Tests for Section 9 (Writing practices) checks."""
 
-import pytest
-import spacy
-
 from stelint.checks_section9 import (
     check_consistent_style,
     check_consistent_terminology,
@@ -12,12 +9,6 @@ from stelint.checks_section9 import (
     check_word_for_word_replacement,
     check_word_usage,
 )
-
-
-@pytest.fixture
-def nlp_model():
-    """Load spaCy model once for all tests."""
-    return spacy.load("en_core_web_sm")
 
 
 class TestCheckWordUsage:

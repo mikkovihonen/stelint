@@ -1,8 +1,5 @@
 """Tests for Section 5 (Procedural writing) checks."""
 
-import pytest
-import spacy
-
 from stelint.checks_section5 import (
     check_descriptive_statement_first,
     check_multiple_instructions,
@@ -10,12 +7,6 @@ from stelint.checks_section5 import (
     check_notes,
     check_sentence_length_procedural,
 )
-
-
-@pytest.fixture
-def nlp_model():
-    """Load spaCy model once for all tests."""
-    return spacy.load("en_core_web_sm")
 
 
 class TestCheckSentenceLengthProcedural:

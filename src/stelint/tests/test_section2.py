@@ -1,19 +1,10 @@
 """Tests for Section 2 (Multi-word nouns) checks."""
 
-import pytest
-import spacy
-
 from stelint.checks_section2 import (
     check_multi_word_nouns,
     check_technical_noun_clarity,
     check_too_long_technical_nouns,
 )
-
-
-@pytest.fixture
-def nlp_model():
-    """Load spaCy model once for all tests."""
-    return spacy.load("en_core_web_sm")
 
 
 class TestCheckMultiWordNouns:

@@ -1,8 +1,5 @@
 """Tests for Section 1 (Words) checks."""
 
-import pytest
-import spacy
-
 from stelint.checks_section1 import (
     check_approved_forms,
     check_approved_meaning,
@@ -18,12 +15,6 @@ from stelint.checks_section1 import (
     check_technical_verb_as_noun,
     check_technical_verb_category,
 )
-
-
-@pytest.fixture
-def nlp_model():
-    """Load spaCy model once for all tests."""
-    return spacy.load("en_core_web_sm")
 
 
 class TestCheckApprovedWords:

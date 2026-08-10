@@ -1,8 +1,5 @@
 """Tests for Section 4 (Sentences) checks."""
 
-import pytest
-import spacy
-
 from stelint.checks_section4 import (
     check_article_usage,
     check_connecting_words,
@@ -12,12 +9,6 @@ from stelint.checks_section4 import (
     check_short_sentences,
     check_vertical_lists,
 )
-
-
-@pytest.fixture
-def nlp_model():
-    """Load spaCy model once for all tests."""
-    return spacy.load("en_core_web_sm")
 
 
 class TestCheckShortSentences:

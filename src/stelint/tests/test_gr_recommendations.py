@@ -1,8 +1,5 @@
 """Tests for General Recommendations (GR-1 to GR-8) checks."""
 
-import pytest
-import spacy
-
 from stelint.checks_gr_recommendations import (
     check_ambiguous_pronouns,
     check_ambiguous_this,
@@ -13,12 +10,6 @@ from stelint.checks_gr_recommendations import (
     check_latin_abbreviations,
     check_possessive_form,
 )
-
-
-@pytest.fixture
-def nlp_model():
-    """Load spaCy model once for all tests."""
-    return spacy.load("en_core_web_sm")
 
 
 class TestCheckConjunctionThat:
