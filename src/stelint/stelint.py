@@ -11,9 +11,15 @@ import sys
 def _get_nlp():
     """Load spaCy model lazily to avoid slow imports."""
     try:
+        import time
+
         import spacy as spacy_module
 
-        return spacy_module.load("en_core_web_sm")
+        print("Loading spaCy model (first run may be slow)...", file=sys.stderr)
+        start = time.time()
+        nlp = spacy_module.load("en_core_web_sm")
+        print(f"Model loaded in {time.time() - start:.1f}s", file=sys.stderr)
+        return nlp
     except OSError:
         return None
 
