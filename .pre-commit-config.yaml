@@ -6,6 +6,12 @@ repos:
         entry: .github/scripts/check_uv_lock.sh
         language: script
         pass_filenames: false
+      - id: check-version-consistency
+        name: Check version consistency across pyproject.toml, git tag, and CHANGELOG.md
+        entry: python .github/scripts/check_version_consistency.py
+        language: system
+        pass_filenames: false
+        always_run: true
       - id: ruff
         name: Run ruff
         entry: uv run ruff check .
