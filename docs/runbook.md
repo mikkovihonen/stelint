@@ -31,7 +31,15 @@ Stelint can use [sense2vec](https://github.com/explosion/sense2vec) for enhanced
 To install the English sense2vec model:
 
 ```bash
-python -m sense2vec install en
+# 1. Download the model
+wget https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v-reddit-2015-distinct.model.tar.gz
+
+# 2. Extract to a directory
+mkdir -p ~/.local/share/s2v
+tar -xzf s2v-reddit-2015-distinct.model.tar.gz -C ~/.local/share/s2v
+
+# 3. Set the environment variable
+export SENSE2VEC_PATH=~/.local/share/s2v
 ```
 
 ## Quick start

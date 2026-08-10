@@ -229,7 +229,7 @@ def main():
     # Notify about optional sense2vec model
     if not _check_sense2vec_available():
         print(
-            "Note: Install sense2vec for enhanced word sense checks: python -m sense2vec install en",
+            "Note: For enhanced word sense checks, set SENSE2VEC_PATH to a sense2vec model directory.",
             file=sys.stderr,
         )
 
