@@ -10,14 +10,14 @@ repos:
         name: Run ruff
         entry: uv run ruff check .
         language: system
-        pass_filenames: false
+        files: '\.py$'
       - id: ruff-format
         name: Run ruff format check
         entry: uv run ruff format --check .
         language: system
-        pass_filenames: false
+        files: '\.py$'
       - id: pytest
         name: Run pytest
         entry: uv run pytest
         language: system
-        pass_filenames: false
+        files: '\.py$'
