@@ -95,8 +95,8 @@ def main() -> None:
         "--precision",
         "-p",
         type=int,
-        default=1,
-        help="Decimal places for coverage percentage (default: 1)",
+        default=0,
+        help="Decimal places for coverage percentage (default: 0)",
     )
     parser.add_argument(
         "--dry-run",
