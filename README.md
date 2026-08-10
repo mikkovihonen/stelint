@@ -24,4 +24,4 @@ Stelint is an ASD-STE100 linter built with spaCy. It checks whether your text co
 
 We use agentic software tools to build this project.
 
-- [Pi Coding Agent](https://pi.dev) via [pi-container](https://mikkovihonen.github.io/pi-container/).# test
+- [Pi Coding Agent](https://pi.dev) via [pi-container](https://mikkovihonen.github.io/pi-container/).
