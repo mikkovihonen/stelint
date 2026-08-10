@@ -177,6 +177,9 @@ def main():
         print("Options:")
         print("  --include-all  Show all warnings, including those inside metadata regions")
         print("  --glossaries   Path to glossaries.yaml config file")
+        print()
+        print("Requires spaCy model 'en_core_web_sm'. First run may be slow.")
+        print("Install with: python -m spacy download en_core_web_sm")
         sys.exit(0)
 
     if sys.argv[1] in ("--help", "-h"):
@@ -188,6 +191,9 @@ def main():
         print("Options:")
         print("  --include-all  Show all warnings, including those inside metadata regions")
         print("  --glossaries   Path to glossaries.yaml config file")
+        print()
+        print("Requires spaCy model 'en_core_web_sm'. First run may be slow.")
+        print("Install with: python -m spacy download en_core_web_sm")
         sys.exit(0)
 
     if sys.argv[1] == "-":
