@@ -6,17 +6,22 @@
 - [uv](https://docs.astral.sh/uv/) for dependency management
 - A spaCy English model (`en_core_web_sm`)
 
-### Install the spaCy model
-
-```bash
-python -m spacy download en_core_web_sm
-```
-
 ### Install stelint
 
 ```bash
 cd <repo-root>
 uv sync
+```
+
+`uv sync` installs the `en_core_web_sm` model along with the dev dependencies, so
+no separate download step is needed for local development or CI.
+
+### Install the spaCy model
+
+Only needed when installing stelint from PyPI, where the model is not bundled:
+
+```bash
+python -m spacy download en_core_web_sm
 ```
 
 ## Quick start

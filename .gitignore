@@ -5,6 +5,8 @@ __pycache__/
 src/stelint/s2v
 .cache
 .pytest_cache
+.coverage
+coverage.xml
 
 .pi-container/agent/sessions
 .pi-container/exports
