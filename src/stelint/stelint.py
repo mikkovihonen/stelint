@@ -11,15 +11,9 @@ import sys
 def _get_nlp():
     """Load spaCy model lazily to avoid slow imports."""
     try:
-        import time
-
         import spacy as spacy_module
 
-        print("Loading spaCy model (first run may be slow)...")
-        start = time.time()
-        nlp = spacy_module.load("en_core_web_sm")
-        print(f"Model loaded in {time.time() - start:.1f}s")
-        return nlp
+        return spacy_module.load("en_core_web_sm")
     except OSError as e:
         print(f"Error: Could not load spaCy model 'en_core_web_sm'. {e}", file=sys.stderr)
         print("Install it with: python -m spacy download en_core_web_sm", file=sys.stderr)
@@ -225,13 +219,6 @@ def main():
     nlp = _get_nlp()
     if nlp is None:
         sys.exit(1)
-
-    # Notify about optional sense2vec model
-    if not _check_sense2vec_available():
-        print(
-            "Note: For enhanced word sense checks, set STELINT_S2V_PATH to a sense2vec model directory.",
-            file=sys.stderr,
-        )
 
     doc = nlp(cleaned_text)
 
