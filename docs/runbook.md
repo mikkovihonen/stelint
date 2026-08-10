@@ -1,7 +1,5 @@
 # Stelint Runbook
 
-Stelint is an ASD-STE100 linter built with spaCy. It checks whether your text conforms to the Simplified Technical English (STE) specification and reports issues in Vale-compatible format.
-
 ## Prerequisites
 
 - Python 3.13 or later

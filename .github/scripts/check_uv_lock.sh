@@ -11,4 +11,10 @@ if ! git ls-files --error-unmatch uv.lock >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "uv.lock is present and tracked."
+# Check that uv.lock is consistent with pyproject.toml
+if ! uv lock --check; then
+  echo "Error: uv.lock is out of sync with pyproject.toml. Run 'uv lock' to update it." >&2
+  exit 1
+fi
+
+echo "uv.lock is present, tracked, and up to date."

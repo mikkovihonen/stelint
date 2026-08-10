@@ -1,6 +1,6 @@
 # Development
 
-This repository uses `uv` for dependency management, build execution, and developer tooling.
+This repository uses `uv` for dependency management, the package building, and the developer tooling.
 
 ## Local setup
 
@@ -24,17 +24,17 @@ uv run python -m stelint
 
 ## Pre-commit and quality checks
 
-Run the configured pre-commit hooks with:
+Do the configured pre-commit hooks for all files:
 
 ```bash
 uv run pre-commit run --all-files
 ```
 
-This project includes hooks to ensure:
+This project uses these hooks:
 
-- `uv.lock` is present and tracked
-- `ruff` linting passes
-- `pytest` test suite passes
+- Verify that the `uv.lock` file exists, is in the git index, and up-to-date.
+- Run `ruff` for linting
+- Run the pytest suite
 
 ## Build and publishing
 
@@ -58,8 +58,8 @@ Build the documentation site with Zensical:
 uv run python -m zensical build
 ```
 
-The site is published via GitHub Pages from the `gh-pages` branch.
+GitHub Actions publishes the site via GitHub Pages from the gh-pages branch.
 
 ## GitHub Actions
 
-All CI workflows use `uv` for dependency management, environment sync, and Python execution.
+All CI workflows use `uv` for dependency management, the environment sync, and the Python execution.

@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Generate a coverage.svg badge from the .coverage file."""
 
+import argparse
 import os
 import sys
 
 from coverage import Coverage
 from coverage.exceptions import NoDataError
 
-OUTPUT_DIR = os.path.join("docs", "assets")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "coverage.svg")
+DEFAULT_OUTPUT_DIR = os.path.join("docs", "assets")
+DEFAULT_OUTPUT_FILE = os.path.join(DEFAULT_OUTPUT_DIR, "coverage.svg")
 
 # Shields.io-style badge dimensions (3/5 label, 2/5 value)
 WIDTH = 114
@@ -19,18 +20,25 @@ HEIGHT = 20
 # Text content
 LEFT_TEXT = "coverage"
 
-# Text positions (centered in each section, scaled by 10 to match font-size 110)
+# Text positions (scaled by 10 to match font-size 110)
 LEFT_X = 340  # center of 68px section (68/2 * 10)
 RIGHT_X = 910  # center of right section ((68 + 46/2) * 10)
 
-# Text lengths tuned for visual centering (from original badge style)
+# Text lengths tuned for visual centering
 LEFT_TEXT_LENGTH = 530
 RIGHT_TEXT_LENGTH = 280
 
+# Reasonable blur for a 20px badge
+BLUR_STD_DEVIATION = 0.8
 
-def generate_badge(coverage_pct: int) -> str:
-    """Generate Shields.io-style coverage badge SVG."""
-    # Determine right section color based on coverage
+
+def generate_badge(coverage_pct: float, precision: int = 1) -> str:
+    """Generate a Shields.io-style coverage badge SVG.
+
+    Args:
+        coverage_pct: Coverage percentage (0–100).
+        precision: Number of decimal places for the percentage display.
+    """
     if coverage_pct >= 90:
         right_color = "#4c1"  # bright green
     elif coverage_pct >= 75:
@@ -38,11 +46,11 @@ def generate_badge(coverage_pct: int) -> str:
     else:
         right_color = "#e05d44"  # red
 
-    coverage_str = f"{coverage_pct}%"
+    coverage_str = f"{coverage_pct:.{precision}f}%"
 
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" role="img" aria-label="coverage: {coverage_str}">
   <title>coverage: {coverage_str}</title>
-  <filter id="blur"><feGaussianBlur stdDeviation="16"/></filter>
+  <filter id="blur"><feGaussianBlur stdDeviation="{BLUR_STD_DEVIATION}"/></filter>
   <linearGradient id="s" x2="0" y2="100%">
     <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
     <stop offset="1" stop-opacity=".1"/>
@@ -74,23 +82,60 @@ def generate_badge(coverage_pct: int) -> str:
     return svg
 
 
-def main():
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Generate a coverage.svg badge from the .coverage file.",
+    )
+    parser.add_argument(
+        "--output", "-o",
+        help=f"Output SVG path (default: {DEFAULT_OUTPUT_FILE})",
+        default=DEFAULT_OUTPUT_FILE,
+    )
+    parser.add_argument(
+        "--precision", "-p",
+        type=int,
+        default=1,
+        help="Decimal places for coverage percentage (default: 1)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print the SVG to stdout without writing to disk",
+    )
+    args = parser.parse_args()
+
     c = Coverage()
-    c.load()
+    try:
+        c.load()
+    except FileNotFoundError:
+        print("No .coverage data file found — skipping badge generation.", file=sys.stderr)
+        sys.exit(0)
+
     try:
         total = c.report()
     except NoDataError:
         print("No .coverage data found — skipping badge generation.", file=sys.stderr)
         sys.exit(0)
 
-    pct = round(total)
-    svg = generate_badge(pct)
+    svg = generate_badge(total, precision=args.precision)
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(OUTPUT_FILE, "w") as f:
-        f.write(svg)
+    if args.dry_run:
+        print(svg)
+        return
 
-    print(f"Coverage badge written: {pct}%")
+    output_dir = os.path.dirname(args.output)
+    try:
+        os.makedirs(output_dir, exist_ok=True)
+    except OSError as exc:
+        raise SystemExit(f"Cannot create output directory {output_dir!r}: {exc}")
+
+    try:
+        with open(args.output, "w") as f:
+            f.write(svg)
+    except OSError as exc:
+        raise SystemExit(f"Cannot write to {args.output!r}: {exc}")
+
+    print(f"Coverage badge written: {total:.{args.precision}f}% → {args.output}")
 
 
 if __name__ == "__main__":

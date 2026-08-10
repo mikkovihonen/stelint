@@ -6,30 +6,52 @@ on:
       - 'v*'
   workflow_dispatch:
 
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: uv-cache-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-cache-${{ runner.os }}-
+
       - name: Install uv
         run: |
           python -m pip install --upgrade pip
           python -m pip install uv
+
       - name: Sync project environment
         run: uv sync
+
       - name: Extract release notes from CHANGELOG
         id: release_notes
         run: |
           tag=${GITHUB_REF#refs/tags/}
           version=${tag#v}
           notes=$(uv run python .github/scripts/extract_release_notes.py "$version")
-          echo "release_notes<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$notes" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          {
+            echo 'release_notes<<'"'"'ENDOFGITHUBOUTPUT'"'"'
+            echo "$notes"
+            echo 'ENDOFGITHUBOUTPUT'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -37,10 +59,27 @@ jobs:
           RELEASE_NAME: Release ${{ github.ref_name }}
           RELEASE_NOTES: ${{ steps.release_notes.outputs.release_notes }}
         run: uv run python .github/scripts/create_release.py
+
       - name: Build distribution
         run: uv run python -m build
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then
+            echo "Error: 'dist/' directory is missing or empty after build." >&2
+            exit 1
+          fi
+          echo "Build artifacts:"
+          ls -lh dist/
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
       - name: Publish to PyPI
-        run: uv run python -m twine upload --repository pypi dist/*
+        run: uv run python -m twine upload --repository pypi --skip-existing dist/*
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
