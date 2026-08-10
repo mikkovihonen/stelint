@@ -26,6 +26,17 @@ def _get_nlp():
         return None
 
 
+def _check_sense2vec_available() -> bool:
+    """Check if sense2vec model is available."""
+    try:
+        from sense2vec import Sense2Vec
+
+        Sense2Vec().from_disk("en")
+        return True
+    except (ImportError, OSError, FileNotFoundError, ValueError):
+        return False
+
+
 # Import check functions from Section 1 (Words)
 # Import check functions from General Recommendations
 from .checks_gr_recommendations import (
@@ -191,6 +202,13 @@ def main():
     nlp = _get_nlp()
     if nlp is None:
         sys.exit(1)
+
+    # Notify about optional sense2vec model
+    if not _check_sense2vec_available():
+        print(
+            "Note: Install sense2vec for enhanced word sense checks: python -m sense2vec install en",
+            file=sys.stderr,
+        )
 
     doc = nlp(cleaned_text)
 

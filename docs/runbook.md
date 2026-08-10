@@ -24,6 +24,16 @@ Only needed when installing stelint from PyPI, where the model is not bundled:
 python -m spacy download en_core_web_sm
 ```
 
+### Optional: sense2vec model
+
+Stelint can use [sense2vec](https://github.com/explosion/sense2vec) for enhanced word sense disambiguation in Section 6 checks. This is optional — stelint works fully without it.
+
+To install the English sense2vec model:
+
+```bash
+python -m sense2vec install en
+```
+
 ## Quick start
 
 Lint a file:
