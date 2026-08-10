@@ -182,7 +182,8 @@ def main():
         print("Install with: python -m spacy download en_core_web_sm")
         print()
         print("Optional: sense2vec for enhanced word sense checks.")
-        print("Download, extract, and set STELINT_S2V_PATH environment variable.")
+        print("Download: https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v-reddit-2015-distinct.model.tar.gz")
+        print("Extract to a directory, then set STELINT_S2V_PATH to that directory.")
         sys.exit(0)
 
     if sys.argv[1] in ("--help", "-h"):
@@ -199,7 +200,8 @@ def main():
         print("Install with: python -m spacy download en_core_web_sm")
         print()
         print("Optional: sense2vec for enhanced word sense checks.")
-        print("Download, extract, and set STELINT_S2V_PATH environment variable.")
+        print("Download: https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v-reddit-2015-distinct.model.tar.gz")
+        print("Extract to a directory, then set STELINT_S2V_PATH to that directory.")
         sys.exit(0)
 
     if sys.argv[1] == "-":
