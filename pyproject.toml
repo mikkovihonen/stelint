@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
-stelint = "stelint:main"
+stelint = "stelint.stelint:main"
 
 [build-system]
 requires = ["uv_build>=0.12.3,<0.13"]
@@ -30,8 +30,8 @@ default-groups = ["dev"]
 
 [tool.uv.build-backend]
 # Tests are run from a source checkout, so keep them out of the distributions.
-source-exclude = ["**/tests/**", "**/.DS_Store"]
-wheel-exclude = ["**/tests/**", "**/.DS_Store"]
+source-exclude = ["**/tests/**", "**/.DS_Store", "**/s2v/vectors"]
+wheel-exclude = ["**/tests/**", "**/.DS_Store", "**/s2v/vectors"]
 
 [dependency-groups]
 dev = [
