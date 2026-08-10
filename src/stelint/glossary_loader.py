@@ -10,10 +10,10 @@ Loads constants from JSONL files with support for:
 Example usage:
     loader = ConstantsLoader('asd-ste100_base.jsonl')
     loader.load('company_glossary.jsonl')  # Override with company config
-    
+
     # Get a specific constant
     words = loader.get('words', 'NON_APPROVED_WORDS')
-    
+
     # Get all constants in a namespace
     all_words = loader.get_all('words')
 """
@@ -25,21 +25,21 @@ from typing import Any
 class ConstantsLoader:
     """
     Load and manage ASD-STE100 constants from JSONL files.
-    
+
     Supports namespace-based loading and cardinality where later
     configurations override earlier ones.
-    
+
     To REMOVE a constant from a mapping in an override, use the
     __REMOVE__ sentinel value. Example:
-    
+
         {"namespace": "words", "name": "NON_APPROVED_WORDS",
          "type": "mapping", "data": {"unwanted_word": "__REMOVE__"}}
     """
-    
+
     def __init__(self, base_path: str | None = None):
         """
         Initialize the loader.
-        
+
         Args:
             base_path: Optional base path for JSONL files (defaults to current directory)
         """
@@ -47,142 +47,142 @@ class ConstantsLoader:
         self.configs: dict[str, dict[str, Any]] = {}
         self.metadata: dict[str, dict[str, Any]] = {}
         self._current_filter: list[str] | None = None
-    
+
     def load(self, path: str, namespace_filter: list[str] | None = None):
         """
         Load constants from a JSONL file.
-        
+
         Args:
             path: Path to the JSONL file
             namespace_filter: Optional list of namespaces to load
         """
         full_path = os.path.join(self.base_path, path) if not os.path.isabs(path) else path
         self._current_filter = namespace_filter
-        
+
         with open(full_path, 'r', encoding='utf-8') as f:
             for line_num, line in enumerate(f, 1):
                 line = line.strip()
                 if not line:
                     continue
-                
+
                 try:
                     obj = json.loads(line)
                     self._process_entry(obj, line_num)
                 except json.JSONDecodeError as e:
                     print(f"Warning: Invalid JSON on line {line_num} in {path}: {e}")
-        
+
         self._current_filter = None
-    
+
     def _process_entry(self, obj: dict[str, Any], line_num: int):
         """Process a single JSONL entry."""
         namespace = obj.get('namespace', 'general')
         name = obj.get('name')
-        
+
         if not name:
             print(f"Warning: Entry on line {line_num} missing 'name' field")
             return
-        
+
         # Apply namespace filter if specified
         if self._current_filter and namespace not in self._current_filter:
             return
-        
+
         # Store the data (later entries override earlier ones)
         self.configs.setdefault(namespace, {})[name] = obj.get('data', {})
-        
+
         # Store metadata
         self.metadata.setdefault(namespace, {})[name] = {
             'rules': obj.get('rules', []),
             'type': obj.get('type', 'unknown'),
             'line': line_num,
         }
-    
+
     def get(self, namespace: str, name: str) -> Any:
         """
         Get a specific constant.
-        
+
         Args:
             namespace: The namespace (e.g., 'words', 'verbs')
             name: The constant name (e.g., 'NON_APPROVED_WORDS')
-            
+
         Returns:
             The constant value, or None if not found
         """
         return self.configs.get(namespace, {}).get(name)
-    
+
     def get_all(self, namespace: str) -> dict[str, Any]:
         """
         Get all constants in a namespace.
-        
+
         Args:
             namespace: The namespace to retrieve
-            
+
         Returns:
             Dictionary of all constants in the namespace
         """
         return self.configs.get(namespace, {}).copy()
-    
+
     def get_rules(self, namespace: str, name: str) -> list[str]:
         """
         Get the STE100 rule references for a constant.
-        
+
         Args:
             namespace: The namespace
             name: The constant name
-            
+
         Returns:
             List of rule references (e.g., ['Rule 1.10', 'GR-5'])
         """
         return self.metadata.get(namespace, {}).get(name, {}).get('rules', [])
-    
+
     def get_type(self, namespace: str, name: str) -> str:
         """
         Get the data type of a constant.
-        
+
         Args:
             namespace: The namespace
             name: The constant name
-            
+
         Returns:
             Type string (e.g., 'mapping', 'collection')
         """
         return self.metadata.get(namespace, {}).get(name, {}).get('type', 'unknown')
-    
+
     def get_namespaces(self) -> list[str]:
         """
         Get all loaded namespaces.
-        
+
         Returns:
             List of namespace names
         """
         return sorted(self.configs.keys())
-    
+
     def get_constants_in_namespace(self, namespace: str) -> list[str]:
         """
         Get all constant names in a namespace.
-        
+
         Args:
             namespace: The namespace
-            
+
         Returns:
             List of constant names
         """
         return sorted(self.configs.get(namespace, {}).keys())
-    
+
     def merge(self, other: 'ConstantsLoader'):
         """
         Merge another loader's configuration (other overrides self).
-        
+
         This performs a deep merge where:
         - For mapping types: keys from other override keys from self
         - For mapping types: values equal to __REMOVE__ delete the key from self
         - For collection types: values from other replace values from self
-        
+
         To remove a key from a mapping in an override, set its value to
         "__REMOVE__". Example:
-        
+
             {"namespace": "words", "name": "NON_APPROVED_WORDS",
              "type": "mapping", "data": {"unwanted_word": "__REMOVE__"}}
-        
+
         Args:
             other: Another ConstantsLoader instance
         """
@@ -202,48 +202,48 @@ class ConstantsLoader:
                 else:
                     # Replace for other types
                     self_ns[name] = value
-        
+
         for namespace, meta in other.metadata.items():
             self.metadata.setdefault(namespace, {}).update(meta)
-    
+
     def load_override(self, override_path: str):
         """
         Load an override configuration file.
-        
+
         This is a convenience method that loads the override and merges it
         with the current configuration, allowing later configurations to
         override earlier ones.
-        
+
         Args:
             override_path: Path to the override JSONL file
         """
         # Save current state
         saved_configs = self.configs.copy()
         self.metadata.copy()
-        
+
         # Clear and reload
         self.configs = {}
         self.metadata = {}
-        
+
         # Load base configuration
         # (Assuming base was loaded first)
-        
+
         # Load override
         self.load(override_path)
-        
+
         # Merge: base + override (override wins)
         override_configs = self.configs.copy()
-        
+
         # Reset and merge
         self.configs = {}
         self.metadata = {}
-        
+
         for ns, consts in saved_configs.items():
             self.configs.setdefault(ns, {}).update(consts)
-        
+
         for ns, consts in override_configs.items():
             self.configs.setdefault(ns, {}).update(consts)
-    
+
     def __repr__(self):
         """String representation."""
         namespaces = ', '.join(self.get_namespaces())
@@ -258,7 +258,7 @@ _default_loader: ConstantsLoader | None = None
 def get_default_loader() -> ConstantsLoader:
     """
     Get the default loader instance.
-    
+
     Returns:
         The default ConstantsLoader instance
     """
@@ -271,11 +271,11 @@ def get_default_loader() -> ConstantsLoader:
 def load_constants(path: str, namespace_filter: list[str] | None = None) -> ConstantsLoader:
     """
     Convenience function to load constants from a file.
-    
+
     Args:
         path: Path to the JSONL file (default: 'asd-ste100_base.jsonl')
         namespace_filter: Optional list of namespaces to load
-        
+
     Returns:
         Loaded ConstantsLoader instance
     """

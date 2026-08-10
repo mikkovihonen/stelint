@@ -308,7 +308,7 @@ def _get_markdown_blocks(md: str) -> list[tuple[int, int, str]]:
         line_end = md.find('\n', m.start())
         if line_end == -1:
             line_end = len(md)
-        
+
         line = md[line_start:line_end]
         # Only treat as table delimiter if line has multiple | characters
         # (indicating it's a table row, not a standalone pipe).
@@ -625,7 +625,7 @@ def preprocess_markdown(
     # linter can suppress errors on visible link text.
     for start, end in link_text_regions:
         merged.append((start, end, "link"))
-    
+
     # Add code-as-noun regions to the regions list.
     for start, end in code_as_noun_regions:
         merged.append((start, end, "code-as-noun"))

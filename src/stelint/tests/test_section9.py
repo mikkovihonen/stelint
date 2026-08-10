@@ -20,13 +20,13 @@ def nlp_model():
 
 class TestCheckWordUsage:
     """Tests for check_word_usage function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The temperature go up by 10 degrees.")
         issues = check_word_usage(doc)
         assert isinstance(issues, list)
-    
+
     def test_normal_text(self, nlp_model):
         """Test with normal text."""
         doc = nlp_model("Check the filter.")
@@ -35,13 +35,13 @@ class TestCheckWordUsage:
 
 class TestCheckConsistentStyle:
     """Tests for check_consistent_style function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The body is secure. The hull is tight.")
         issues = check_consistent_style(doc)
         assert isinstance(issues, list)
-    
+
     def test_empty_doc(self, nlp_model):
         """Test with empty document."""
         doc = nlp_model("")
@@ -50,13 +50,13 @@ class TestCheckConsistentStyle:
 
 class TestCheckPhrasalVerbs:
     """Tests for check_phrasal_verbs function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The temperature go up by 10 degrees.")
         issues = check_phrasal_verbs(doc)
         assert isinstance(issues, list)
-    
+
     def test_normal_text(self, nlp_model):
         """Test with normal text."""
         doc = nlp_model("Check the filter.")
@@ -65,7 +65,7 @@ class TestCheckPhrasalVerbs:
 
 class TestCheckConsistentTerminology:
     """Tests for check_consistent_terminology function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The body assembly is secure.")
@@ -74,7 +74,7 @@ class TestCheckConsistentTerminology:
 
 class TestCheckDifferentSentenceConstructions:
     """Tests for check_different_sentence_constructions function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The filter is clean. The pump is leaky.")
@@ -83,13 +83,13 @@ class TestCheckDifferentSentenceConstructions:
 
 class TestCheckWordForWordReplacement:
     """Tests for check_word_for_word_replacement function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The filter is clean. The filter is dry.")
         issues = check_word_for_word_replacement(doc)
         assert isinstance(issues, list)
-    
+
     def test_different_words(self, nlp_model):
         """Test with different words."""
         doc = nlp_model("The filter is clean. The pump is dry.")
@@ -98,13 +98,13 @@ class TestCheckWordForWordReplacement:
 
 class TestCheckNonApprovedWords:
     """Tests for check_non_approved_words function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The bollocks is broken.")
         issues = check_non_approved_words(doc)
         assert isinstance(issues, list)
-    
+
     def test_normal_text(self, nlp_model):
         """Test with normal text."""
         doc = nlp_model("Check the filter.")

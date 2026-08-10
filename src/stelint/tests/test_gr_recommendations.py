@@ -21,13 +21,13 @@ def nlp_model():
 
 class TestCheckConjunctionThat:
     """Tests for check_conjunction_that function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("Make sure the filter is clean.")
         issues = check_conjunction_that(doc)
         assert isinstance(issues, list)
-    
+
     def test_with_that(self, nlp_model):
         """Test with 'that'."""
         doc = nlp_model("Make sure that the filter is clean.")
@@ -36,7 +36,7 @@ class TestCheckConjunctionThat:
 
 class TestCheckAmbiguousWith:
     """Tests for check_ambiguous_with function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("Check the filter with the wrench.")
@@ -45,13 +45,13 @@ class TestCheckAmbiguousWith:
 
 class TestCheckAmbiguousPronouns:
     """Tests for check_ambiguous_pronouns function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The filter is clean. It is dry.")
         issues = check_ambiguous_pronouns(doc)
         assert isinstance(issues, list)
-    
+
     def test_clear_pronoun(self, nlp_model):
         """Test with clear pronoun reference."""
         doc = nlp_model("Check the filter. It is clean.")
@@ -60,7 +60,7 @@ class TestCheckAmbiguousPronouns:
 
 class TestCheckAmbiguousThis:
     """Tests for check_ambiguous_this function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The filter is clean. This is dry.")
@@ -69,13 +69,13 @@ class TestCheckAmbiguousThis:
 
 class TestCheckFalseFriends:
     """Tests for check_false_friends function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The actual temperature is high.")
         issues = check_false_friends(doc)
         assert isinstance(issues, list)
-    
+
     def test_normal_text(self, nlp_model):
         """Test with normal text."""
         doc = nlp_model("The current temperature is high.")
@@ -84,13 +84,13 @@ class TestCheckFalseFriends:
 
 class TestCheckLatinAbbreviations:
     """Tests for check_latin_abbreviations function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("See i.e. the filter for details.")
         issues = check_latin_abbreviations(doc)
         assert isinstance(issues, list)
-    
+
     def test_normal_text(self, nlp_model):
         """Test with normal text."""
         doc = nlp_model("Check the filter for details.")
@@ -99,13 +99,13 @@ class TestCheckLatinAbbreviations:
 
 class TestCheckGenderPronouns:
     """Tests for check_gender_pronouns function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The operator he checks the filter.")
         issues = check_gender_pronouns(doc)
         assert isinstance(issues, list)
-    
+
     def test_neutral_pronoun(self, nlp_model):
         """Test with neutral pronoun."""
         doc = nlp_model("The operator they check the filter.")
@@ -114,13 +114,13 @@ class TestCheckGenderPronouns:
 
 class TestCheckPossessiveForm:
     """Tests for check_possessive_form function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The filter's condition is good.")
         issues = check_possessive_form(doc)
         assert isinstance(issues, list)
-    
+
     def test_normal_text(self, nlp_model):
         """Test with normal text."""
         doc = nlp_model("The condition of the filter is good.")

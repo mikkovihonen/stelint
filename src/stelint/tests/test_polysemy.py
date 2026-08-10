@@ -4,7 +4,7 @@ from stelint.checks_section6 import check_key_words
 
 class TestPolysemyDetection:
     """Tests for polysemy-aware key word checking.
-    
+
     Current implementation uses POS tagging as the primary polysemy signal.
     Other methods (dependency analysis, collocation, semantic roles, embeddings)
     require external libraries and are not yet implemented.

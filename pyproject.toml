@@ -36,6 +36,14 @@ dev = [
     "pre-commit",
 ]
 
+[tool.ruff]
+target-version = "py313"
+line-length = 200
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E402", "E501"]
+
 [tool.setuptools]
 packages = ["stelint"]
 

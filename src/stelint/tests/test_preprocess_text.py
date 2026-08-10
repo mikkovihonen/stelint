@@ -1791,16 +1791,16 @@ Read **[Getting Started](docs/getting-started.md)** for details.
 """
         text, mapping, _ = preprocess_markdown(md)
         assert len(text) == len(md), "Cleaned text length should match original"
-        
+
         # Check no markdown characters
         markdown_chars = ['`', '*', '[', ']', '#', '!', '|']
         found_chars = [ch for ch in text if ch in markdown_chars]
         assert len(found_chars) == 0, f"Found markdown characters: {set(found_chars)}"
-        
+
         # Check no None values in mapping
         none_count = sum(1 for v in mapping.values() if v is None)
         assert none_count == 0, f"Found {none_count} None values in offset mapping"
-        
+
         # Check key text content is preserved
         assert "pi-container" in text
         assert "pi-coding-agent" in text
@@ -1812,7 +1812,7 @@ Read **[Getting Started](docs/getting-started.md)** for details.
         # llama-server is in backticks (inline code) and should be removed
         assert "llama-server" not in text
         assert "Getting Started" in text
-        
+
         # Check key content is removed
         assert "pi.dev" not in text
         assert "ci-img.png" not in text
@@ -3193,16 +3193,16 @@ Read **[Getting Started](docs/getting-started.md)** for details.
 """
         text, mapping, _regions = preprocess_markdown(md)
         assert len(text) == len(md), "Cleaned text length should match original"
-        
+
         # Check no markdown characters
         markdown_chars = ['`', '*', '[', ']', '#', '!', '|']
         found_chars = [ch for ch in text if ch in markdown_chars]
         assert len(found_chars) == 0, f"Found markdown characters: {set(found_chars)}"
-        
+
         # Check no None values in mapping
         none_count = sum(1 for v in mapping.values() if v is None)
         assert none_count == 0, f"Found {none_count} None values in offset mapping"
-        
+
         # Check key text content is preserved
         assert "pi-container" in text
         assert "pi-coding-agent" in text
@@ -3212,7 +3212,7 @@ Read **[Getting Started](docs/getting-started.md)** for details.
         assert "mitmproxy" in text
         assert "llama.cpp" in text
         assert "Getting Started" in text
-        
+
         # Check key content is removed
         assert "pi.dev" not in text
         assert "ci-img.png" not in text

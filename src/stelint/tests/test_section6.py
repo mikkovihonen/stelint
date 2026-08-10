@@ -19,7 +19,7 @@ def nlp_model():
 
 class TestCheckInformationStructure:
     """Tests for check_information_structure function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("Check the filter. The filter is clean.")
@@ -28,13 +28,13 @@ class TestCheckInformationStructure:
 
 class TestCheckKeyWords:
     """Tests for check_key_words function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The filter is clean. This filter is dry.")
         issues = check_key_words(doc)
         assert isinstance(issues, list)
-    
+
     def test_different_keywords(self, nlp_model):
         """Test with different keywords."""
         doc = nlp_model("The filter is clean. The pump is dry.")
@@ -43,13 +43,13 @@ class TestCheckKeyWords:
 
 class TestCheckSentenceLengthDescriptive:
     """Tests for check_sentence_length_descriptive function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("This is a very long sentence that exceeds the maximum allowed length for descriptive writing.")
         issues = check_sentence_length_descriptive(doc)
         assert isinstance(issues, list)
-    
+
     def test_short_sentence(self, nlp_model):
         """Test with short sentence."""
         doc = nlp_model("The filter is clean.")
@@ -58,7 +58,7 @@ class TestCheckSentenceLengthDescriptive:
 
 class TestCheckParagraphStructure:
     """Tests for check_paragraph_structure function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The filter is clean. The pump is leaky. The valve is stuck.")
@@ -67,7 +67,7 @@ class TestCheckParagraphStructure:
 
 class TestCheckParagraphTopic:
     """Tests for check_paragraph_topic function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("The filter is clean. The pump is leaky. The valve is stuck.")
@@ -76,13 +76,13 @@ class TestCheckParagraphTopic:
 
 class TestCheckParagraphLength:
     """Tests for check_paragraph_length function."""
-    
+
     def test_returns_list(self, nlp_model):
         """Test that function returns a list."""
         doc = nlp_model("Sentence one. Sentence two. Sentence three. Sentence four. Sentence five. Sentence six. Sentence seven.")
         issues = check_paragraph_length(doc)
         assert isinstance(issues, list)
-    
+
     def test_short_paragraph(self, nlp_model):
         """Test with short paragraph."""
         doc = nlp_model("Sentence one. Sentence two. Sentence three.")
