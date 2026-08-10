@@ -180,6 +180,9 @@ def main():
         print()
         print("Requires spaCy model 'en_core_web_sm'. First run may be slow.")
         print("Install with: python -m spacy download en_core_web_sm")
+        print()
+        print("Optional: sense2vec for enhanced word sense checks.")
+        print("Download, extract, and set STELINT_S2V_PATH environment variable.")
         sys.exit(0)
 
     if sys.argv[1] in ("--help", "-h"):
@@ -194,6 +197,9 @@ def main():
         print()
         print("Requires spaCy model 'en_core_web_sm'. First run may be slow.")
         print("Install with: python -m spacy download en_core_web_sm")
+        print()
+        print("Optional: sense2vec for enhanced word sense checks.")
+        print("Download, extract, and set STELINT_S2V_PATH environment variable.")
         sys.exit(0)
 
     if sys.argv[1] == "-":
