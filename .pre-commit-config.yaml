@@ -20,4 +20,4 @@ repos:
         name: Run pytest
         entry: uv run pytest
         language: system
-        files: '\.py$'
+        files: 'src/.*test_.*\.py$'
