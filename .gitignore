@@ -9,6 +9,7 @@ src/stelint/s2v
 coverage.xml
 site/
 dist
+sense2vec/
 
 .pi-container/agent/sessions
 .pi-container/exports
