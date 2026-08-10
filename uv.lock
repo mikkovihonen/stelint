@@ -1310,6 +1310,22 @@ wheels = [
 ]
 
 [[package]]
+name = "sense2vec"
+version = "2.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "catalogue" },
+    { name = "numpy" },
+    { name = "spacy" },
+    { name = "srsly" },
+    { name = "wasabi" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ad/e3/e987ff210e1882cc6d6d8196ef9314474d5be9ef0f5714e37470c41a0383/sense2vec-2.0.2.tar.gz", hash = "sha256:c7df6f89f74d83ed13c85998fe5792e836f7971e099af955211a6adefabaa768", size = 61403, upload-time = "2023-04-17T14:12:39.433Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8d/48/408ca521800c7de2d6d796fb6258be507e475fff5472536d0641ef53a8e7/sense2vec-2.0.2-py2.py3-none-any.whl", hash = "sha256:f2a5e0b55038e599317e6dc40dae30a24f00277976a05d37035e7acaf08fc727", size = 40570, upload-time = "2023-04-17T14:12:36.073Z" },
+]
+
+[[package]]
 name = "setuptools"
 version = "84.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1445,6 +1461,7 @@ dependencies = [
     { name = "beautifulsoup4" },
     { name = "nltk" },
     { name = "numpy" },
+    { name = "sense2vec" },
     { name = "spacy" },
 ]
 
@@ -1466,6 +1483,7 @@ requires-dist = [
     { name = "beautifulsoup4" },
     { name = "nltk" },
     { name = "numpy" },
+    { name = "sense2vec", specifier = ">=1.0.0" },
     { name = "spacy" },
 ]
 

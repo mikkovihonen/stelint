@@ -21,11 +21,14 @@ import numpy as np
 from .glossary import COMMON_DETERMINERS
 
 # Load sense2vec model once at module level for reuse
+# The model is not bundled with the package due to its size (584MB).
+# Users can optionally install it for enhanced checking:
+#   python -m sense2vec install en
 try:
     from sense2vec import Sense2Vec
 
-    s2v_model = Sense2Vec().from_disk(".pi-container/agent/extensions/prosecco/spacy/s2v")
-except (ImportError, OSError, FileNotFoundError):
+    s2v_model = Sense2Vec().from_disk("en")
+except (ImportError, OSError, FileNotFoundError, ValueError):
     s2v_model = None
 
 

@@ -16,6 +16,7 @@ dependencies = [
     "numpy",
     "beautifulsoup4",
     "nltk",
+    "sense2vec>=1.0.0",
 ]
 
 [project.scripts]
