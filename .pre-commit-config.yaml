@@ -11,6 +11,11 @@ repos:
         entry: uv run ruff check .
         language: system
         pass_filenames: false
+      - id: ruff-format
+        name: Run ruff format check
+        entry: uv run ruff format --check .
+        language: system
+        pass_filenames: false
       - id: pytest
         name: Run pytest
         entry: uv run pytest

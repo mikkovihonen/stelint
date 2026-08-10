@@ -86,12 +86,14 @@ def main() -> None:
         description="Generate a coverage.svg badge from the .coverage file.",
     )
     parser.add_argument(
-        "--output", "-o",
+        "--output",
+        "-o",
         help=f"Output SVG path (default: {DEFAULT_OUTPUT_FILE})",
         default=DEFAULT_OUTPUT_FILE,
     )
     parser.add_argument(
-        "--precision", "-p",
+        "--precision",
+        "-p",
         type=int,
         default=1,
         help="Decimal places for coverage percentage (default: 1)",

@@ -33,8 +33,7 @@ def github_api_request(
                 if attempt < MAX_RETRIES:
                     backoff = INITIAL_BACKOFF * (2 ** (attempt - 1))
                     print(
-                        f"Retryable error ({exc.code}). "
-                        f"Retrying in {backoff:.1f}s (attempt {attempt}/{MAX_RETRIES})...",
+                        f"Retryable error ({exc.code}). Retrying in {backoff:.1f}s (attempt {attempt}/{MAX_RETRIES})...",
                         file=sys.stderr,
                     )
                     time.sleep(backoff)
@@ -45,8 +44,7 @@ def github_api_request(
             if attempt < MAX_RETRIES:
                 backoff = INITIAL_BACKOFF * (2 ** (attempt - 1))
                 print(
-                    f"Network error: {exc.reason}. "
-                    f"Retrying in {backoff:.1f}s (attempt {attempt}/{MAX_RETRIES})...",
+                    f"Network error: {exc.reason}. Retrying in {backoff:.1f}s (attempt {attempt}/{MAX_RETRIES})...",
                     file=sys.stderr,
                 )
                 time.sleep(backoff)
@@ -113,10 +111,7 @@ def main() -> None:
         data = json.loads(resp_body)
         print("Release created:", data.get("html_url"))
     elif status == 422:
-        raise SystemExit(
-            f"Release creation failed (422). The tag {tag!r} may already be in use by a "
-            f"non-release git reference. Response: {resp_body}"
-        )
+        raise SystemExit(f"Release creation failed (422). The tag {tag!r} may already be in use by a non-release git reference. Response: {resp_body}")
     else:
         raise SystemExit(f"GitHub API error {status}: {resp_body}")
 
