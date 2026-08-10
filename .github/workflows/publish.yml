@@ -1,9 +1,9 @@
 name: Publish Python package
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions: {}
@@ -18,8 +18,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -41,23 +39,20 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install uv
 
-      - name: Check that CI was triggered by a tag release
-        run: |
-          sha="${{ github.event.workflow_run.head_sha }}"
-          tag=$(git ls-remote --tags --refs origin "refs/tags/v*" | awk -v sha="$sha" '$1 == sha {sub(/^.*tags\//, "", $2); print $2; exit}')
-          if [ -z "$tag" ]; then
-            echo "Error: CI was not triggered by a tag release. Only tag releases can be published." >&2
-            exit 1
-          fi
-          echo "CI was triggered by tag release: $tag"
-
       - name: Sync project environment
         run: uv sync
 
       - name: Verify tag matches project version
         run: |
-          sha="${{ github.event.workflow_run.head_sha }}"
-          tag=$(git ls-remote --tags --refs origin "refs/tags/v*" | awk -v sha="$sha" '$1 == sha {sub(/^.*tags\//, "", $2); print $2; exit}')
+          case "$GITHUB_REF" in
+            refs/tags/*) ;;
+            *)
+              echo "Error: this workflow must run against a tag ref, but got '$GITHUB_REF'." >&2
+              echo "Re-run it from the Actions tab with a tag selected as the ref." >&2
+              exit 1
+              ;;
+          esac
+          tag=${GITHUB_REF#refs/tags/}
           tag_version=${tag#v}
           project_version=$(uv run python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
           if [ "$tag_version" != "$project_version" ]; then
