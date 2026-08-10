@@ -4,6 +4,7 @@ __pycache__/
 .DS_Store
 src/stelint/s2v
 .cache
+.pytest_cache
 
 .pi-container/agent/sessions
 .pi-container/exports
