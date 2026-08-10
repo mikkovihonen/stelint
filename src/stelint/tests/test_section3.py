@@ -1,4 +1,5 @@
 """Tests for Section 3 (Verbs) checks."""
+
 import pytest
 import spacy
 
@@ -17,6 +18,7 @@ from stelint.checks_section3 import (
 def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
+
 
 class TestCheckVerbForms:
     """Tests for check_verb_forms function."""
@@ -39,6 +41,7 @@ class TestCheckVerbForms:
         issues = check_verb_forms(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckVerbTenses:
     """Tests for check_verb_tenses function."""
 
@@ -53,6 +56,7 @@ class TestCheckVerbTenses:
         doc = nlp_model("The system has processed the data.")
         issues = check_verb_tenses(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckPastParticipleAsAdjective:
     """Tests for check_past_participle_as_adjective function."""
@@ -69,6 +73,7 @@ class TestCheckPastParticipleAsAdjective:
         issues = check_past_participle_as_adjective(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckPassiveVoice:
     """Tests for check_passive_voice function."""
 
@@ -84,6 +89,7 @@ class TestCheckPassiveVoice:
         issues = check_passive_voice(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckPassiveVoiceWithAgent:
     """Tests for check_passive_voice_with_agent function."""
 
@@ -92,6 +98,7 @@ class TestCheckPassiveVoiceWithAgent:
         doc = nlp_model("The filter is cleaned by the technician.")
         issues = check_passive_voice_with_agent(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckIngForms:
     """Tests for check_ing_forms function."""
@@ -107,6 +114,7 @@ class TestCheckIngForms:
         doc = nlp_model("The temperature is high.")
         issues = check_ing_forms(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckNounAsVerb:
     """Tests for check_noun_as_verb function."""

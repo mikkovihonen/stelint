@@ -1,4 +1,5 @@
 """Tests for Section 6 (Descriptive writing) checks."""
+
 import pytest
 import spacy
 
@@ -17,6 +18,7 @@ def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
 
+
 class TestCheckInformationStructure:
     """Tests for check_information_structure function."""
 
@@ -25,6 +27,7 @@ class TestCheckInformationStructure:
         doc = nlp_model("Check the filter. The filter is clean.")
         issues = check_information_structure(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckKeyWords:
     """Tests for check_key_words function."""
@@ -41,6 +44,7 @@ class TestCheckKeyWords:
         issues = check_key_words(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckSentenceLengthDescriptive:
     """Tests for check_sentence_length_descriptive function."""
 
@@ -56,6 +60,7 @@ class TestCheckSentenceLengthDescriptive:
         issues = check_sentence_length_descriptive(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckParagraphStructure:
     """Tests for check_paragraph_structure function."""
 
@@ -65,6 +70,7 @@ class TestCheckParagraphStructure:
         issues = check_paragraph_structure(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckParagraphTopic:
     """Tests for check_paragraph_topic function."""
 
@@ -73,6 +79,7 @@ class TestCheckParagraphTopic:
         doc = nlp_model("The filter is clean. The pump is leaky. The valve is stuck.")
         issues = check_paragraph_topic(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckParagraphLength:
     """Tests for check_paragraph_length function."""

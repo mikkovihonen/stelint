@@ -135,12 +135,10 @@ def preprocess_html(
     # Use BeautifulSoup to validate the HTML structure.
     try:
         from bs4 import BeautifulSoup
+
         BeautifulSoup(html, "html.parser")
     except ImportError:
-        raise ImportError(
-            "beautifulsoup4 is required for HTML preprocessing. "
-            "Install it with: pip install beautifulsoup4"
-        )
+        raise ImportError("beautifulsoup4 is required for HTML preprocessing. Install it with: pip install beautifulsoup4")
     except (SyntaxError, ValueError):
         pass  # Invalid HTML; proceed with regex-based processing.
 
@@ -224,10 +222,7 @@ def _get_markdown_blocks(md: str) -> list[tuple[int, int, str]]:
     try:
         from markdown_it import MarkdownIt
     except ImportError:  # pragma: no cover
-        raise ImportError(
-            "markdown-it-py is required for Markdown preprocessing. "
-            "Install it with: pip install markdown-it-py"
-        )
+        raise ImportError("markdown-it-py is required for Markdown preprocessing. Install it with: pip install markdown-it-py")
 
     md_it = MarkdownIt()
     md_it.parse(md)
@@ -264,7 +259,7 @@ def _get_markdown_blocks(md: str) -> list[tuple[int, int, str]]:
     for m in link_pattern.finditer(md):
         full_match = m.group()
         # Find where the URL part starts (the opening paren of the URL).
-        url_start_in_match = full_match.find('(')
+        url_start_in_match = full_match.find("(")
         if url_start_in_match >= 0:
             # Replace only the URL part with spaces, keep link text visible.
             # The entire link is marked as "link" region.
@@ -304,15 +299,15 @@ def _get_markdown_blocks(md: str) -> list[tuple[int, int, str]]:
     table_delimiter_pattern = re.compile(r"\|")
     for m in table_delimiter_pattern.finditer(md):
         # Check if this | is part of a table row.
-        line_start = md.rfind('\n', 0, m.start()) + 1
-        line_end = md.find('\n', m.start())
+        line_start = md.rfind("\n", 0, m.start()) + 1
+        line_end = md.find("\n", m.start())
         if line_end == -1:
             line_end = len(md)
 
         line = md[line_start:line_end]
         # Only treat as table delimiter if line has multiple | characters
         # (indicating it's a table row, not a standalone pipe).
-        if line.count('|') >= 2:
+        if line.count("|") >= 2:
             blocks.append((m.start(), m.end(), "table_delimiter"))
 
     # Collect horizontal rules: ---, ***, ___, or with spaces between chars
@@ -531,7 +526,7 @@ def preprocess_markdown(
                     offset_map[start + i] = start + i
                     parts.append(" ")
                 # Keep the actual header text visible
-                for i, ch in enumerate(header_text[header_match.end():]):
+                for i, ch in enumerate(header_text[header_match.end() :]):
                     offset_map[start + hash_length + i] = start + hash_length + i
                     parts.append(ch)
             else:

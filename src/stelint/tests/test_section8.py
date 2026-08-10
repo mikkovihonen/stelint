@@ -1,4 +1,5 @@
 """Tests for Section 8 (Punctuation and word count) checks."""
+
 import pytest
 import spacy
 
@@ -19,6 +20,7 @@ def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
 
+
 class TestCheckSemicolons:
     """Tests for check_semicolons function."""
 
@@ -33,6 +35,7 @@ class TestCheckSemicolons:
         doc = nlp_model("Check the filter. Clean the pump.")
         issues = check_semicolons(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckHyphens:
     """Tests for check_hyphens function."""
@@ -49,6 +52,7 @@ class TestCheckHyphens:
         issues = check_hyphens(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckParenthesesUsage:
     """Tests for check_parentheses_usage function."""
 
@@ -64,6 +68,7 @@ class TestCheckParenthesesUsage:
         issues = check_parentheses_usage(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckWordCountWithParentheses:
     """Tests for check_word_count_with_parentheses function."""
 
@@ -72,6 +77,7 @@ class TestCheckWordCountWithParentheses:
         doc = nlp_model("Check (Fig. 1) the filter.")
         issues = check_word_count_with_parentheses(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckWordCountWithNumbers:
     """Tests for check_word_count_with_numbers function."""
@@ -82,6 +88,7 @@ class TestCheckWordCountWithNumbers:
         issues = check_word_count_with_numbers(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckHyphenationPatterns:
     """Tests for check_hyphenation_patterns function."""
 
@@ -91,6 +98,7 @@ class TestCheckHyphenationPatterns:
         issues = check_hyphenation_patterns(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckVerticalListColons:
     """Tests for check_vertical_list_colons function."""
 
@@ -99,6 +107,7 @@ class TestCheckVerticalListColons:
         doc = nlp_model("Check the following: filter, pump, valve.")
         issues = check_vertical_list_colons(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckWordCountAll:
     """Tests for check_word_count_all function."""

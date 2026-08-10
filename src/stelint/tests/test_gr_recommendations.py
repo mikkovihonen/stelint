@@ -1,4 +1,5 @@
 """Tests for General Recommendations (GR-1 to GR-8) checks."""
+
 import pytest
 import spacy
 
@@ -19,6 +20,7 @@ def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
 
+
 class TestCheckConjunctionThat:
     """Tests for check_conjunction_that function."""
 
@@ -34,6 +36,7 @@ class TestCheckConjunctionThat:
         issues = check_conjunction_that(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckAmbiguousWith:
     """Tests for check_ambiguous_with function."""
 
@@ -42,6 +45,7 @@ class TestCheckAmbiguousWith:
         doc = nlp_model("Check the filter with the wrench.")
         issues = check_ambiguous_with(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckAmbiguousPronouns:
     """Tests for check_ambiguous_pronouns function."""
@@ -58,6 +62,7 @@ class TestCheckAmbiguousPronouns:
         issues = check_ambiguous_pronouns(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckAmbiguousThis:
     """Tests for check_ambiguous_this function."""
 
@@ -66,6 +71,7 @@ class TestCheckAmbiguousThis:
         doc = nlp_model("The filter is clean. This is dry.")
         issues = check_ambiguous_this(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckFalseFriends:
     """Tests for check_false_friends function."""
@@ -82,6 +88,7 @@ class TestCheckFalseFriends:
         issues = check_false_friends(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckLatinAbbreviations:
     """Tests for check_latin_abbreviations function."""
 
@@ -97,6 +104,7 @@ class TestCheckLatinAbbreviations:
         issues = check_latin_abbreviations(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckGenderPronouns:
     """Tests for check_gender_pronouns function."""
 
@@ -111,6 +119,7 @@ class TestCheckGenderPronouns:
         doc = nlp_model("The operator they check the filter.")
         issues = check_gender_pronouns(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckPossessiveForm:
     """Tests for check_possessive_form function."""

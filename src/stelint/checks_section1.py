@@ -31,6 +31,7 @@ Rule 1.13: Do not use technical verbs as nouns.
 Spelling
 Rule 1.14: Use American English spelling unless other official directives tell you differently.
 """
+
 import re
 
 from .glossary import (
@@ -92,12 +93,14 @@ def check_approved_words(doc):
 
             if token.idx not in seen:
                 seen.add(token.idx)
-                issues.append({
-                    "type": "ApprovedWords",
-                    "message": f"Word '{word}' is not approved in STE. Use a word that is approved in the dictionary, a technical noun, or a technical verb. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "ApprovedWords",
+                        "message": f"Word '{word}' is not approved in STE. Use a word that is approved in the dictionary, a technical noun, or a technical verb. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -128,18 +131,17 @@ def check_part_of_speech(doc):
                 # Use dependency parsing to check for noun-like children
                 # A verb typically has: dobj (direct object), attr (attribute),
                 # ccomp (clausal complement), xcomp (open complement)
-                has_noun_children = any(
-                    c.pos_ == "NOUN" and c.dep_ in ("dobj", "attr", "ccomp", "xcomp")
-                    for c in token.children
-                )
+                has_noun_children = any(c.pos_ == "NOUN" and c.dep_ in ("dobj", "attr", "ccomp", "xcomp") for c in token.children)
                 if has_noun_children and token.idx not in seen:
                     seen.add(token.idx)
-                    issues.append({
-                        "type": "PartOfSpeech",
-                        "message": f"Word '{word}' is used as {token.pos_} but should be used as {approved_pos}.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "PartOfSpeech",
+                            "message": f"Word '{word}' is used as {token.pos_} but should be used as {approved_pos}.",
+                            "offset": token.idx,
+                            "length": len(token.text),
+                        }
+                    )
 
     return issues
 
@@ -170,12 +172,14 @@ def check_approved_meaning(doc):
             # Check if word is used in approved context
             if not _is_in_approved_context(token, doc, context_words, restricted_info) and token.idx not in seen:
                 seen.add(token.idx)
-                issues.append({
-                    "type": "ApprovedMeaning",
-                    "message": f"Word '{word}' is used with a meaning that may not be approved in STE.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "ApprovedMeaning",
+                        "message": f"Word '{word}' is used with a meaning that may not be approved in STE.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -203,19 +207,18 @@ def check_approved_forms(doc):
             # Exception: when used as technical noun or modifier
             if tag == "VBG":
                 # Check if it's being used as a verb (has verb-like children)
-                has_verb_children = any(
-                    c.dep_ in ("dobj", "attr", "ccomp", "xcomp")
-                    for c in token.children
-                )
+                has_verb_children = any(c.dep_ in ("dobj", "attr", "ccomp", "xcomp") for c in token.children)
 
                 # Check if token is in verb position
                 if has_verb_children and token.dep_ in ("ROOT", "advcl", "relcl") and token.lemma_ not in {"be", "have", "do"} and token.lemma_ not in APPROVED_ING_FORMS and token.idx not in seen:
-                    issues.append({
-                        "type": "ApprovedForms",
-                        "message": f"Do not use '{token.text}' (VBG). Use simple past or simple present tense instead.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "ApprovedForms",
+                            "message": f"Do not use '{token.text}' (VBG). Use simple past or simple present tense instead.",
+                            "offset": token.idx,
+                            "length": len(token.text),
+                        }
+                    )
 
     return issues
 
@@ -311,12 +314,14 @@ def check_non_approved_as_technical(doc):
             # If word is not used as a noun, it's a violation
             if not is_technical_noun and token.idx not in seen:
                 seen.add(token.idx)
-                issues.append({
-                    "type": "NonApprovedAsTechnical",
-                    "message": f"Word '{word}' is not approved. Only use it as a technical noun. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "NonApprovedAsTechnical",
+                        "message": f"Word '{word}' is not approved. Only use it as a technical noun. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -342,20 +347,19 @@ def check_technical_noun_as_verb(doc):
         # Check if word is a technical noun being used as a verb
         if word in TECHNICAL_NOUNS_NOT_AS_VERBS:
             # Check if it's being used as a verb (has verb-like dependencies)
-            has_verb_children = any(
-                c.dep_ in ("dobj", "attr", "ccomp", "xcomp")
-                for c in token.children
-            )
+            has_verb_children = any(c.dep_ in ("dobj", "attr", "ccomp", "xcomp") for c in token.children)
 
             # Check if token is in verb position (ROOT, advcl, relcl)
             if has_verb_children and token.dep_ in ("ROOT", "advcl", "relcl") and (token.pos_ == "NOUN" or (token.pos_ == "VERB" and token.tag_ == "VB")) and token.idx not in seen:
                 replacement = TECHNICAL_NOUNS_NOT_AS_VERBS[word]
-                issues.append({
-                    "type": "TechnicalNounAsVerb",
-                    "message": f"Do not use technical noun '{word}' as a verb. Use '{replacement}' instead.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "TechnicalNounAsVerb",
+                        "message": f"Do not use technical noun '{word}' as a verb. Use '{replacement}' instead.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -401,12 +405,14 @@ def check_technical_noun_approval(doc):
                 # This is a non-approved word in a technical noun context
                 # Flag it for review (not all technical nouns are wrong, just need approval)
                 seen.add(token.idx)
-                issues.append({
-                    "type": "TechnicalNounApproval",
-                    "message": f"Technical noun '{word}' may not be approved in your company/industry. Verify against your terminology database. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "TechnicalNounApproval",
+                        "message": f"Technical noun '{word}' may not be approved in your company/industry. Verify against your terminology database. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -442,12 +448,14 @@ def check_too_long_technical_nouns(doc):
         for match in matches:
             if match.start() not in seen:
                 seen.add(match.start())
-                issues.append({
-                    "type": "TooLongTechnicalNouns",
-                    "message": f"Use a shorter technical noun. Use '{replacement}' instead of '{match.group()}'.",
-                    "offset": match.start(),
-                    "length": len(match.group()),
-                })
+                issues.append(
+                    {
+                        "type": "TooLongTechnicalNouns",
+                        "message": f"Use a shorter technical noun. Use '{replacement}' instead of '{match.group()}'.",
+                        "offset": match.start(),
+                        "length": len(match.group()),
+                    }
+                )
 
     return issues
 
@@ -487,12 +495,14 @@ def check_regional_slang_jargon(doc):
             if token.idx not in seen:
                 seen.add(token.idx)
                 replacement = REGIONAL_SLANG_JARGON[word]
-                issues.append({
-                    "type": "RegionalSlangJargon",
-                    "message": f"Do not use regional/slang/jargon word '{word}'. Use '{replacement}' instead.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "RegionalSlangJargon",
+                        "message": f"Do not use regional/slang/jargon word '{word}'. Use '{replacement}' instead.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -518,12 +528,14 @@ def check_consistent_technical_nouns(doc):
         for match in matches:
             if match.start() not in seen:
                 seen.add(match.start())
-                issues.append({
-                    "type": "ConsistentTechnicalNouns",
-                    "message": f"Use consistent terminology. Use '{replacement}' instead of '{match.group()}'.",
-                    "offset": match.start(),
-                    "length": len(match.group()),
-                })
+                issues.append(
+                    {
+                        "type": "ConsistentTechnicalNouns",
+                        "message": f"Use consistent terminology. Use '{replacement}' instead of '{match.group()}'.",
+                        "offset": match.start(),
+                        "length": len(match.group()),
+                    }
+                )
 
     return issues
 
@@ -550,7 +562,91 @@ def check_technical_verb_category(doc):
     for token in doc:
         if token.pos_ == "VERB":
             # Skip common verbs (these are generally approved)
-            if token.is_stop or token.lemma_ in {"be", "have", "do", "say", "get", "make", "go", "come", "see", "know", "think", "take", "give", "put", "use", "find", "tell", "ask", "work", "call", "try", "need", "want", "look", "keep", "let", "begin", "show", "hear", "play", "run", "move", "like", "live", "believe", "hold", "bring", "happen", "write", "provide", "sit", "stand", "lose", "pay", "meet", "include", "continue", "set", "learn", "change", "lead", "understand", "watch", "follow", "stop", "create", "speak", "read", "allow", "add", "spend", "grow", "open", "walk", "win", "offer", "remember", "love", "consider", "appear", "buy", "wait", "serve", "die", "send", "expect", "build", "stay", "fall", "cut", "reach", "kill", "remain"}:
+            if token.is_stop or token.lemma_ in {
+                "be",
+                "have",
+                "do",
+                "say",
+                "get",
+                "make",
+                "go",
+                "come",
+                "see",
+                "know",
+                "think",
+                "take",
+                "give",
+                "put",
+                "use",
+                "find",
+                "tell",
+                "ask",
+                "work",
+                "call",
+                "try",
+                "need",
+                "want",
+                "look",
+                "keep",
+                "let",
+                "begin",
+                "show",
+                "hear",
+                "play",
+                "run",
+                "move",
+                "like",
+                "live",
+                "believe",
+                "hold",
+                "bring",
+                "happen",
+                "write",
+                "provide",
+                "sit",
+                "stand",
+                "lose",
+                "pay",
+                "meet",
+                "include",
+                "continue",
+                "set",
+                "learn",
+                "change",
+                "lead",
+                "understand",
+                "watch",
+                "follow",
+                "stop",
+                "create",
+                "speak",
+                "read",
+                "allow",
+                "add",
+                "spend",
+                "grow",
+                "open",
+                "walk",
+                "win",
+                "offer",
+                "remember",
+                "love",
+                "consider",
+                "appear",
+                "buy",
+                "wait",
+                "serve",
+                "die",
+                "send",
+                "expect",
+                "build",
+                "stay",
+                "fall",
+                "cut",
+                "reach",
+                "kill",
+                "remain",
+            }:
                 continue
 
             # Check if verb is in non-approved list
@@ -558,12 +654,14 @@ def check_technical_verb_category(doc):
             if lemma in NON_APPROVED_WORDS and NON_APPROVED_WORDS[lemma] is None and token.idx not in seen:
                 # This is a non-approved technical verb
                 seen.add(token.idx)
-                issues.append({
-                    "type": "TechnicalVerbCategory",
-                    "message": f"Technical verb '{lemma}' may not be approved in your company/industry. Verify against your terminology database. To allow '{lemma}' as a technical term, run: /prosecco-add-to-glossary '{lemma}'",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "TechnicalVerbCategory",
+                        "message": f"Technical verb '{lemma}' may not be approved in your company/industry. Verify against your terminology database. To allow '{lemma}' as a technical term, run: /prosecco-add-to-glossary '{lemma}'",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -597,12 +695,14 @@ def check_technical_verb_as_noun(doc):
             if lemma in TECHNICAL_VERBS_NOT_AS_NOUNS and token.idx not in seen:
                 seen.add(token.idx)
                 replacement = TECHNICAL_VERBS_NOT_AS_NOUNS[lemma]
-                issues.append({
-                    "type": "TechnicalVerbAsNoun",
-                    "message": f"Do not use technical verb '{lemma}' as a noun. Use '{replacement}' instead.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "TechnicalVerbAsNoun",
+                        "message": f"Do not use technical verb '{lemma}' as a noun. Use '{replacement}' instead.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -638,11 +738,13 @@ def check_british_english(doc):
         if word in BRITISH_ENGLISH and token.idx not in seen:
             seen.add(token.idx)
             replacement = BRITISH_ENGLISH[word]
-            issues.append({
-                "type": "BritishEnglish",
-                "message": f"Use American English spelling. Use '{replacement}' instead of '{token.text}'.",
-                "offset": token.idx,
-                "length": len(token.text),
-            })
+            issues.append(
+                {
+                    "type": "BritishEnglish",
+                    "message": f"Use American English spelling. Use '{replacement}' instead of '{token.text}'.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                }
+            )
 
     return issues

@@ -5,6 +5,7 @@ This module contains utility functions that are used by multiple check modules.
 These functions are not directly checking ASD-STE100 rules but provide common
 functionality for the check functions.
 """
+
 import spacy
 
 # Load spaCy model once at module level for reuse
@@ -206,7 +207,7 @@ def _has_connecting_word(sent, connecting_words):
 
     # Check if the first two tokens form a connecting phrase
     if len(first_tokens) >= 2:
-        phrase = ' '.join(first_tokens[:2])
+        phrase = " ".join(first_tokens[:2])
         if phrase in connecting_words:
             return True
 
@@ -293,7 +294,7 @@ def _get_paragraph_index(sent, doc):
         int: Paragraph index (0-based)
     """
     sent_start = sent.start_char
-    paragraphs = doc.text.split('\n\n')
+    paragraphs = doc.text.split("\n\n")
 
     current_offset = 0
     for para_idx, para in enumerate(paragraphs):
@@ -363,11 +364,11 @@ def _find_matching_token(open_token, doc, open_char, close_char, return_index=Fa
     depth = 0
 
     # Check if doc is a spaCy Doc or a list of tokens
-    is_doc = hasattr(doc, '__getitem__') and hasattr(doc[0], 'text')
+    is_doc = hasattr(doc, "__getitem__") and hasattr(doc[0], "text")
 
     if is_doc:
         # doc is a spaCy Doc object
-        for token in doc[open_token.i:]:
+        for token in doc[open_token.i :]:
             if token.text == open_char:
                 depth += 1
             elif token.text == close_char:
@@ -556,8 +557,7 @@ def _count_sentence_words(text):
         if token.text == "-" or (token.text.startswith("-") and token.text != "-"):
             # Find the full hyphenated word
             hyphen_start = i
-            while i < len(tokens) and (tokens[i].text == "-" or
-                    (tokens[i].text.startswith("-") and tokens[i].text != "-")):
+            while i < len(tokens) and (tokens[i].text == "-" or (tokens[i].text.startswith("-") and tokens[i].text != "-")):
                 i += 1
             # Count the entire hyphenated sequence as one word
             if i > hyphen_start:

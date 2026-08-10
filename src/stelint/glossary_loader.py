@@ -17,6 +17,7 @@ Example usage:
     # Get all constants in a namespace
     all_words = loader.get_all('words')
 """
+
 import json
 import os
 from typing import Any
@@ -59,7 +60,7 @@ class ConstantsLoader:
         full_path = os.path.join(self.base_path, path) if not os.path.isabs(path) else path
         self._current_filter = namespace_filter
 
-        with open(full_path, 'r', encoding='utf-8') as f:
+        with open(full_path, "r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
                 line = line.strip()
                 if not line:
@@ -75,8 +76,8 @@ class ConstantsLoader:
 
     def _process_entry(self, obj: dict[str, Any], line_num: int):
         """Process a single JSONL entry."""
-        namespace = obj.get('namespace', 'general')
-        name = obj.get('name')
+        namespace = obj.get("namespace", "general")
+        name = obj.get("name")
 
         if not name:
             print(f"Warning: Entry on line {line_num} missing 'name' field")
@@ -87,13 +88,13 @@ class ConstantsLoader:
             return
 
         # Store the data (later entries override earlier ones)
-        self.configs.setdefault(namespace, {})[name] = obj.get('data', {})
+        self.configs.setdefault(namespace, {})[name] = obj.get("data", {})
 
         # Store metadata
         self.metadata.setdefault(namespace, {})[name] = {
-            'rules': obj.get('rules', []),
-            'type': obj.get('type', 'unknown'),
-            'line': line_num,
+            "rules": obj.get("rules", []),
+            "type": obj.get("type", "unknown"),
+            "line": line_num,
         }
 
     def get(self, namespace: str, name: str) -> Any:
@@ -132,7 +133,7 @@ class ConstantsLoader:
         Returns:
             List of rule references (e.g., ['Rule 1.10', 'GR-5'])
         """
-        return self.metadata.get(namespace, {}).get(name, {}).get('rules', [])
+        return self.metadata.get(namespace, {}).get(name, {}).get("rules", [])
 
     def get_type(self, namespace: str, name: str) -> str:
         """
@@ -145,7 +146,7 @@ class ConstantsLoader:
         Returns:
             Type string (e.g., 'mapping', 'collection')
         """
-        return self.metadata.get(namespace, {}).get(name, {}).get('type', 'unknown')
+        return self.metadata.get(namespace, {}).get(name, {}).get("type", "unknown")
 
     def get_namespaces(self) -> list[str]:
         """
@@ -168,7 +169,7 @@ class ConstantsLoader:
         """
         return sorted(self.configs.get(namespace, {}).keys())
 
-    def merge(self, other: 'ConstantsLoader'):
+    def merge(self, other: "ConstantsLoader"):
         """
         Merge another loader's configuration (other overrides self).
 
@@ -193,7 +194,7 @@ class ConstantsLoader:
                     # Deep merge for mappings with removal support
                     keys_to_delete = []
                     for k, v in value.items():
-                        if v == '__REMOVE__':
+                        if v == "__REMOVE__":
                             keys_to_delete.append(k)
                         else:
                             self_ns[name][k] = v
@@ -246,7 +247,7 @@ class ConstantsLoader:
 
     def __repr__(self):
         """String representation."""
-        namespaces = ', '.join(self.get_namespaces())
+        namespaces = ", ".join(self.get_namespaces())
         total = sum(len(consts) for consts in self.configs.values())
         return f"ConstantsLoader(namespaces=[{namespaces}], constants={total})"
 
@@ -280,7 +281,7 @@ def load_constants(path: str, namespace_filter: list[str] | None = None) -> Cons
         Loaded ConstantsLoader instance
     """
     if not path:
-        path = 'asd-ste100_base.jsonl'
+        path = "asd-ste100_base.jsonl"
     loader = ConstantsLoader()
     loader.load(path, namespace_filter)
     return loader

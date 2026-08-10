@@ -13,6 +13,7 @@ Then, you can use one of these methods to make the technical noun clear:
 This module implements Rule 2.1 (multi-word noun length) and Rule 2.2
 (when technical nouns have more than three words).
 """
+
 import re
 
 from .glossary import LONG_TECHNICAL_NOUN_PATTERNS
@@ -62,12 +63,14 @@ def check_multi_word_nouns(doc):
             # Calculate total length including spaces
             total_length = sum(len(word) for word in words) + len(words) - 1
 
-            issues.append({
-                "type": "MultiWordNouns",
-                "message": f"Multi-word noun '{' '.join(words)}' has {len(words)} words. Use no more than 3 words.",
-                "offset": chunk.start_char,
-                "length": total_length,
-            })
+            issues.append(
+                {
+                    "type": "MultiWordNouns",
+                    "message": f"Multi-word noun '{' '.join(words)}' has {len(words)} words. Use no more than 3 words.",
+                    "offset": chunk.start_char,
+                    "length": total_length,
+                }
+            )
 
     return issues
 
@@ -111,23 +114,25 @@ def check_too_long_technical_nouns(doc):
             continue
 
         # Check if the chunk matches any known long technical noun patterns
-        ' '.join(words)
+        " ".join(words)
 
         # Use regex patterns from glossary to match long technical nouns
         for pattern, replacement in LONG_TECHNICAL_NOUN_PATTERNS:
             # Create a regex pattern that matches the chunk with word boundaries
-            chunk_regex = r'(?i)\b' + r'\s+'.join(re.escape(w) for w in words) + r'\b'
+            chunk_regex = r"(?i)\b" + r"\s+".join(re.escape(w) for w in words) + r"\b"
 
             matches = list(re.finditer(chunk_regex, doc.text))
             for match in matches:
                 if match.start() not in seen:
                     seen.add(match.start())
-                    issues.append({
-                        "type": "TooLongTechnicalNouns",
-                        "message": f"Use a shorter technical noun. Use '{replacement}' instead of '{match.group()}'.",
-                        "offset": match.start(),
-                        "length": len(match.group()),
-                    })
+                    issues.append(
+                        {
+                            "type": "TooLongTechnicalNouns",
+                            "message": f"Use a shorter technical noun. Use '{replacement}' instead of '{match.group()}'.",
+                            "offset": match.start(),
+                            "length": len(match.group()),
+                        }
+                    )
 
     # Also check for specific patterns that spaCy might not detect as noun chunks
     text = doc.text
@@ -136,12 +141,14 @@ def check_too_long_technical_nouns(doc):
         for match in matches:
             if match.start() not in seen:
                 seen.add(match.start())
-                issues.append({
-                    "type": "TooLongTechnicalNouns",
-                    "message": f"Use a shorter technical noun. Use '{replacement}' instead of '{match.group()}'.",
-                    "offset": match.start(),
-                    "length": len(match.group()),
-                })
+                issues.append(
+                    {
+                        "type": "TooLongTechnicalNouns",
+                        "message": f"Use a shorter technical noun. Use '{replacement}' instead of '{match.group()}'.",
+                        "offset": match.start(),
+                        "length": len(match.group()),
+                    }
+                )
 
     return issues
 
@@ -178,7 +185,7 @@ def check_technical_noun_clarity(doc):
             continue
 
         # Skip chunks that are already hyphenated (these are clear)
-        if any('-' in word for word in words):
+        if any("-" in word for word in words):
             continue
 
         # Check if the chunk has ambiguous structure
@@ -190,11 +197,13 @@ def check_technical_noun_clarity(doc):
         if chunk_key not in seen:
             seen.add(chunk_key)
 
-            issues.append({
-                "type": "TechnicalNounClarity",
-                "message": f"Technical noun '{' '.join(words)}' is unclear. Use a shorter form or add a definition.",
-                "offset": chunk.start_char,
-                "length": sum(len(word) for word in words) + len(words) - 1,
-            })
+            issues.append(
+                {
+                    "type": "TechnicalNounClarity",
+                    "message": f"Technical noun '{' '.join(words)}' is unclear. Use a shorter form or add a definition.",
+                    "offset": chunk.start_char,
+                    "length": sum(len(word) for word in words) + len(words) - 1,
+                }
+            )
 
     return issues

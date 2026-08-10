@@ -20,6 +20,7 @@ Rule 8.6: Count each of these elements as one word: Numbers, Numbers together wi
           Proper nouns of individuals, groups, organizations, and geopolitical entities.
 Rule 8.7: Hyphenated words count as one word.
 """
+
 import spacy
 
 from .shared import (
@@ -48,12 +49,14 @@ def check_semicolons(doc):
 
     for token in doc:
         if token.text == ";":
-            issues.append({
-                "type": "Semicolons",
-                "message": "Do not use a semicolon. Write two different sentences instead.",
-                "offset": token.idx,
-                "length": 1,
-            })
+            issues.append(
+                {
+                    "type": "Semicolons",
+                    "message": "Do not use a semicolon. Write two different sentences instead.",
+                    "offset": token.idx,
+                    "length": 1,
+                }
+            )
 
     return issues
 
@@ -87,14 +90,18 @@ def check_hyphens(doc):
             if len(compound_words) > 3 and token.idx not in seen:
                 seen.add(token.idx)
                 hyphenated_text = " ".join(w.text for w in compound_words)
-                issues.append({
-                    "type": "Hyphens",
-                    "message": f"Do not use hyphens for groups of more than three words. '{hyphenated_text}' has {len(compound_words)} words.",
-                    "offset": compound_words[0].idx,
-                    "length": compound_words[-1].idx + len(compound_words[-1].text) - compound_words[0].idx,
-                })
+                issues.append(
+                    {
+                        "type": "Hyphens",
+                        "message": f"Do not use hyphens for groups of more than three words. '{hyphenated_text}' has {len(compound_words)} words.",
+                        "offset": compound_words[0].idx,
+                        "length": compound_words[-1].idx + len(compound_words[-1].text) - compound_words[0].idx,
+                    }
+                )
 
     return issues
+
+
 def check_parentheses_usage(doc):
     """Check for proper parentheses usage (Rule 8.3).
 
@@ -125,20 +132,24 @@ def check_parentheses_usage(doc):
 
             if close_paren:
                 # Get the content between parentheses
-                content_tokens = doc[token.i + 1:close_paren.i]
+                content_tokens = doc[token.i + 1 : close_paren.i]
                 content = " ".join(t.text for t in content_tokens)
 
                 # Check if the content is in an allowed context
                 if not _is_allowed_parentheses_context(content, doc, token.idx) and token.idx not in seen:
                     seen.add(token.idx)
-                    issues.append({
-                        "type": "Parentheses",
-                        "message": f"Use parentheses only for allowed purposes (references, abbreviations, alternatives, etc.). Found: '{content}'.",
-                        "offset": token.idx,
-                        "length": close_paren.idx + len(close_paren.text) - token.idx,
-                    })
+                    issues.append(
+                        {
+                            "type": "Parentheses",
+                            "message": f"Use parentheses only for allowed purposes (references, abbreviations, alternatives, etc.). Found: '{content}'.",
+                            "offset": token.idx,
+                            "length": close_paren.idx + len(close_paren.text) - token.idx,
+                        }
+                    )
 
     return issues
+
+
 def check_word_count_with_parentheses(doc):
     """Check word count with parentheses (Rule 8.5).
 
@@ -162,12 +173,14 @@ def check_word_count_with_parentheses(doc):
         # Check if sentence is too long (20 words for procedures, 25 for descriptive)
         # We'll use the stricter limit (20 words) as the default
         if word_count > 20:
-            issues.append({
-                "type": "SentenceLength",
-                "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
-                "offset": sent.start_char,
-                "length": len(sent.text),
-            })
+            issues.append(
+                {
+                    "type": "SentenceLength",
+                    "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
+                    "offset": sent.start_char,
+                    "length": len(sent.text),
+                }
+            )
 
     return issues
 
@@ -200,12 +213,14 @@ def check_word_count_with_numbers(doc):
         # Check if sentence is too long (20 words for procedures, 25 for descriptive)
         # We'll use the stricter limit (20 words) as the default
         if word_count > 20:
-            issues.append({
-                "type": "SentenceLength",
-                "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
-                "offset": sent.start_char,
-                "length": len(sent.text),
-            })
+            issues.append(
+                {
+                    "type": "SentenceLength",
+                    "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
+                    "offset": sent.start_char,
+                    "length": len(sent.text),
+                }
+            )
 
     return issues
 
@@ -234,14 +249,18 @@ def check_hyphenation_patterns(doc):
         # Check if sentence is too long (20 words for procedures, 25 for descriptive)
         # We'll use the stricter limit (20 words) as the default
         if word_count > 20:
-            issues.append({
-                "type": "SentenceLength",
-                "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
-                "offset": sent.start_char,
-                "length": len(sent.text),
-            })
+            issues.append(
+                {
+                    "type": "SentenceLength",
+                    "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
+                    "offset": sent.start_char,
+                    "length": len(sent.text),
+                }
+            )
 
     return issues
+
+
 def check_vertical_list_colons(doc):
     """Check for proper colon usage in vertical lists (Rule 8.4).
 
@@ -264,9 +283,9 @@ def check_vertical_list_colons(doc):
     for token in doc:
         # Check for colon punctuation
         if token.pos_ == "PUNCT" and token.text == ":" and token.i + 1 < len(doc) and doc[token.i + 1].text == "\n":
-                # This is a vertical list colon - correct usage
-                # No issue to report
-                pass
+            # This is a vertical list colon - correct usage
+            # No issue to report
+            pass
 
     return issues
 
@@ -293,12 +312,14 @@ def check_word_count_all(doc):
         # Check if sentence is too long (20 words for procedures, 25 for descriptive)
         # We'll use the stricter limit (20 words) as the default
         if word_count > 20:
-            issues.append({
-                "type": "SentenceLength",
-                "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
-                "offset": sent.start_char,
-                "length": len(sent.text),
-            })
+            issues.append(
+                {
+                    "type": "SentenceLength",
+                    "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
+                    "offset": sent.start_char,
+                    "length": len(sent.text),
+                }
+            )
 
     return issues
 

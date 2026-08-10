@@ -1,4 +1,5 @@
 """Tests for Section 4 (Sentences) checks."""
+
 import pytest
 import spacy
 
@@ -18,6 +19,7 @@ def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
 
+
 class TestCheckShortSentences:
     """Tests for check_short_sentences function."""
 
@@ -32,6 +34,7 @@ class TestCheckShortSentences:
         doc = nlp_model("Check the filter monthly. Clean it if dirty.")
         issues = check_short_sentences(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckContractions:
     """Tests for check_contractions function."""
@@ -48,6 +51,7 @@ class TestCheckContractions:
         issues = check_contractions(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckForbiddenModals:
     """Tests for check_forbidden_modals function."""
 
@@ -63,6 +67,7 @@ class TestCheckForbiddenModals:
         issues = check_forbidden_modals(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckVerticalLists:
     """Tests for check_vertical_lists function."""
 
@@ -71,6 +76,7 @@ class TestCheckVerticalLists:
         doc = nlp_model("Check the following items: filter, pump, valve.")
         issues = check_vertical_lists(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckConnectingWords:
     """Tests for check_connecting_words function."""
@@ -87,6 +93,7 @@ class TestCheckConnectingWords:
         issues = check_connecting_words(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckMissingArticles:
     """Tests for check_missing_articles function."""
 
@@ -101,6 +108,7 @@ class TestCheckMissingArticles:
         doc = nlp_model("Open the valve.")
         issues = check_missing_articles(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckArticleUsage:
     """Tests for check_article_usage function."""

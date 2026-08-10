@@ -11,6 +11,7 @@ Example:
 
 Namespace and constant name are hardcoded to words/NON_APPROVED_WORDS.
 """
+
 import argparse
 import sys
 
@@ -43,12 +44,12 @@ def main():
     # Add the entry to the project glossary
     result = add_to_project_glossary(namespace, name, args.key, value)
 
-    if result == 'added':
+    if result == "added":
         if args.remove:
             print(f"Added '{args.key}' to project glossary ({namespace}/{name}) with value '__REMOVE__' to mark it for removal.")
         else:
             print(f"Added '{args.key}' to project glossary ({namespace}/{name}) with value '{value}'.")
-    elif result == 'unchanged':
+    elif result == "unchanged":
         print(f"Entry '{args.key}' already exists in project glossary with the same value. No changes made.")
     else:
         print("Failed to add entry to project glossary.", file=sys.stderr)

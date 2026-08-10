@@ -27,6 +27,7 @@ Inclusive language prevents bias and makes sure that all persons have respect an
 GR-8: Possessive form
 The possessive form (also known as the Saxon genitive) adds an apostrophe and "s" to form the possessive. While permitted in STE, use it correctly. If not sure, do not use it.
 """
+
 import re
 
 from .glossary import (
@@ -55,18 +56,20 @@ def check_conjunction_that(doc):
     patterns = CONJUNCTION_THAT_PATTERNS
 
     for pattern_config in patterns:
-        pattern = pattern_config['pattern']
-        replacement = pattern_config['replacement']
+        pattern = pattern_config["pattern"]
+        replacement = pattern_config["replacement"]
         regex_pattern = rf"{re.escape(pattern)}\s+(?!that\b)"
 
         matches = list(re.finditer(regex_pattern, text, re.IGNORECASE))
         for match in matches:
-            issues.append({
-                "type": "ConjunctionThat",
-                "message": f"Consider using '{replacement}' instead of '{match.group()}' to prevent ambiguity.",
-                "offset": match.start(),
-                "length": len(match.group()),
-            })
+            issues.append(
+                {
+                    "type": "ConjunctionThat",
+                    "message": f"Consider using '{replacement}' instead of '{match.group()}' to prevent ambiguity.",
+                    "offset": match.start(),
+                    "length": len(match.group()),
+                }
+            )
 
     return issues
 
@@ -93,12 +96,14 @@ def check_ambiguous_with(doc):
             head = token.head
             if head.pos_ == "VERB" and head.idx not in seen:
                 seen.add(head.idx)
-                issues.append({
-                    "type": "AmbiguousWith",
-                    "message": f"Check for ambiguity. '{head.text} with' can mean 'association', 'help', or 'instrument'.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "AmbiguousWith",
+                        "message": f"Check for ambiguity. '{head.text} with' can mean 'association', 'help', or 'instrument'.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -139,12 +144,14 @@ def check_ambiguous_pronouns(doc):
             chunks_in_sent = [c for c in noun_chunks if c.start_char >= token_sent.start_char and c.end_char < token_sent.end_char]
 
             if len(chunks_in_sent) > 1:
-                issues.append({
-                    "type": "AmbiguousPronouns",
-                    "message": f"Replace '{token.text}' with the specific noun it refers to.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "AmbiguousPronouns",
+                        "message": f"Replace '{token.text}' with the specific noun it refers to.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -170,12 +177,14 @@ def check_ambiguous_this(doc):
 
             # Check if followed by a verb (potential ambiguity)
             if token.head.pos_ == "VERB" or token.dep_ in ("nsubj", "dobj"):
-                issues.append({
-                    "type": "AmbiguousThis",
-                    "message": "Replace 'this' with the specific noun it refers to.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "AmbiguousThis",
+                        "message": "Replace 'this' with the specific noun it refers to.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -196,12 +205,14 @@ def check_false_friends(doc):
         if word in FALSE_FRIENDS and token.idx not in seen:
             seen.add(token.idx)
             replacement = FALSE_FRIENDS[word]
-            issues.append({
-                "type": "FalseFriends",
-                "message": f"Word '{word}' may be a false friend. Consider using '{replacement}' instead.",
-                "offset": token.idx,
-                "length": len(token.text),
-            })
+            issues.append(
+                {
+                    "type": "FalseFriends",
+                    "message": f"Word '{word}' may be a false friend. Consider using '{replacement}' instead.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                }
+            )
 
     return issues
 
@@ -230,12 +241,14 @@ def check_latin_abbreviations(doc):
         if token.text.lower() in LATIN_ABBREVIATIONS and token.idx not in seen:
             seen.add(token.idx)
             replacement = LATIN_ABBREVIATIONS[token.text.lower()]
-            issues.append({
-                "type": "LatinAbbreviations",
-                "message": f"Do not use Latin abbreviation '{token.text}'. Use '{replacement}' instead.",
-                "offset": token.idx,
-                "length": len(token.text),
-            })
+            issues.append(
+                {
+                    "type": "LatinAbbreviations",
+                    "message": f"Do not use Latin abbreviation '{token.text}'. Use '{replacement}' instead.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                }
+            )
 
     return issues
 
@@ -271,12 +284,14 @@ def check_gender_pronouns(doc):
                     else:
                         replacement = "they"
 
-                issues.append({
-                    "type": "GenderPronouns",
-                    "message": f"Do not use gender-specific pronoun '{token.text}'. Use '{replacement}' instead.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "GenderPronouns",
+                        "message": f"Do not use gender-specific pronoun '{token.text}'. Use '{replacement}' instead.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -298,19 +313,21 @@ def check_possessive_form(doc):
             # Check if it's a possessive (case dependency)
             possessor = doc[token.i - 1]
             if possessor.pos_ in ("PROPN", "NOUN"):
-                        key = possessor.idx
-                        if key not in seen:
-                            seen.add(key)
-                            if possessor.text.islower():
-                                msg = f"Use possessive form carefully. Consider: '{possessor.text} of ...' instead of '{possessor.text}'s'."
-                            else:
-                                msg = f"Use possessive form carefully. Consider rewording instead of '{possessor.text}'s'."
+                key = possessor.idx
+                if key not in seen:
+                    seen.add(key)
+                    if possessor.text.islower():
+                        msg = f"Use possessive form carefully. Consider: '{possessor.text} of ...' instead of '{possessor.text}'s'."
+                    else:
+                        msg = f"Use possessive form carefully. Consider rewording instead of '{possessor.text}'s'."
 
-                            issues.append({
-                                "type": "PossessiveForm",
-                                "message": msg,
-                                "offset": possessor.idx,
-                                "length": len(possessor.text) + 2,  # +2 for 's
-                            })
+                    issues.append(
+                        {
+                            "type": "PossessiveForm",
+                            "message": msg,
+                            "offset": possessor.idx,
+                            "length": len(possessor.text) + 2,  # +2 for 's
+                        }
+                    )
 
     return issues

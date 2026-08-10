@@ -1,6 +1,5 @@
 """Tests for the text preprocessing module."""
 
-
 from stelint.preprocess_text import preprocess_html, preprocess_markdown
 
 
@@ -182,7 +181,7 @@ class TestPreprocessHtmlCornerCases:
         assert len(text) == len(html)
         assert "link" in text
         # The attribute value should be part of the tag span.
-        assert text[:text.find("link")].strip() == ""
+        assert text[: text.find("link")].strip() == ""
 
     def test_multiple_entities_in_sequence(self):
         """Handle multiple consecutive HTML entities."""
@@ -286,12 +285,12 @@ class TestPreprocessHtmlCornerCases:
 
     def test_tags_with_newlines(self):
         """Handle tags that span multiple lines."""
-        html = "<div\n  class=\"test\"\n>Content</div>"
+        html = '<div\n  class="test"\n>Content</div>'
         text, _mapping = preprocess_html(html)
         assert len(text) == len(html)
         assert "Content" in text
         # The opening tag with attributes and newlines should be replaced.
-        assert "<div\n  class=\"test\"\n>" not in text
+        assert '<div\n  class="test"\n>' not in text
 
     def test_empty_tag(self):
         """Handle empty or malformed tags."""
@@ -456,7 +455,7 @@ class TestPreprocessHtmlAdvancedCornerCases:
         assert len(text) == len(html)
         assert "link" in text
         # The > in the attribute value should be part of the tag span.
-        assert "<a href=\"http://example.com?a=1>b\">" not in text
+        assert '<a href="http://example.com?a=1>b">' not in text
 
     def test_nested_entities(self):
         """Handle nested/escaped HTML entities."""
@@ -504,8 +503,8 @@ class TestPreprocessHtmlAdvancedCornerCases:
         """Handle different DOCTYPE declarations."""
         htmls = [
             "<!DOCTYPE html>",
-            "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\">",
-            "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">",
+            '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">',
+            '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
         ]
         for html in htmls:
             text, _mapping = preprocess_html(html)
@@ -523,7 +522,7 @@ class TestPreprocessHtmlAdvancedCornerCases:
 
     def test_processing_instruction(self):
         """Handle processing instructions."""
-        html = "Text<?xml version=\"1.0\"?>more"
+        html = 'Text<?xml version="1.0"?>more'
         text, _mapping = preprocess_html(html)
         assert len(text) == len(html)
         assert "Text" in text
@@ -699,7 +698,7 @@ class TestPreprocessMarkdownAdvancedCornerCases:
 
     def test_link_with_empty_url(self):
         """Handle links with empty URL."""
-        md = '[link]()'
+        md = "[link]()"
         text, _mapping, _ = preprocess_markdown(md)
         assert len(text) == len(md)
         # Link text is preserved.
@@ -707,7 +706,7 @@ class TestPreprocessMarkdownAdvancedCornerCases:
 
     def test_image_with_empty_alt(self):
         """Handle images with empty alt text."""
-        md = '![](image.png)'
+        md = "![](image.png)"
         text, _mapping, _ = preprocess_markdown(md)
         assert len(text) == len(md)
         assert "image.png" not in text
@@ -746,7 +745,7 @@ class TestPreprocessMarkdownAdvancedCornerCases:
 
     def test_link_with_fragment(self):
         """Handle links with fragment identifiers."""
-        md = '[link](http://example.com#section)'
+        md = "[link](http://example.com#section)"
         text, _mapping, _ = preprocess_markdown(md)
         assert len(text) == len(md)
         # Link text is preserved.
@@ -756,7 +755,7 @@ class TestPreprocessMarkdownAdvancedCornerCases:
 
     def test_image_with_query_params(self):
         """Handle images with query parameters in URL."""
-        md = '![alt](image.png?w=100&h=200)'
+        md = "![alt](image.png?w=100&h=200)"
         text, _mapping, _ = preprocess_markdown(md)
         assert len(text) == len(md)
         assert "alt" not in text
@@ -1031,6 +1030,7 @@ class TestPreprocessMarkdownEmbedded:
         # All tags replaced
         assert "<video" not in text
         assert "<audio" not in text
+
     """Test cases for Mermaid diagram handling."""
 
     def test_mermaid_block_replaced(self):
@@ -1072,6 +1072,7 @@ class TestPreprocessMarkdownEmbedded:
         # All mermaid content replaced
         assert "graph" not in text
         assert "sequenceDiagram" not in text
+
     """Test cases for Math/LaTeX handling."""
 
     def test_inline_math_replaced(self):
@@ -1129,6 +1130,7 @@ class TestPreprocessMarkdownEmbedded:
         assert "$" not in text
         # Text content preserved
         assert "and" in text
+
     """Test cases for definition list handling."""
 
     def test_definition_marker_replaced(self):
@@ -1182,6 +1184,7 @@ class TestPreprocessMarkdownEmbedded:
         assert "Command" in text
         assert "Run" in text
         assert "npm" in text
+
     """Test cases for autolink handling."""
 
     def test_autolink_replaced(self):
@@ -1241,6 +1244,7 @@ class TestPreprocessMarkdownEmbedded:
         # Text content preserved
         assert "Contact" in text
         assert "for help" in text
+
     """Test cases for task list handling."""
 
     def test_unchecked_task_replaced(self):
@@ -1298,6 +1302,7 @@ class TestPreprocessMarkdownEmbedded:
         assert "Use" in text
         assert "code" in text
         assert "here" in text
+
     """Test cases for footnote handling."""
 
     def test_footnote_reference_replaced(self):
@@ -1357,6 +1362,7 @@ class TestPreprocessMarkdownEmbedded:
         # Text content preserved
         assert "Text with" in text
         assert "reference" in text
+
     """Test cases for list handling."""
 
     def test_dash_list_marker_replaced(self):
@@ -1424,6 +1430,7 @@ class TestPreprocessMarkdownEmbedded:
         assert "italic" in text
         # Star markers replaced (as italic, not list)
         assert "*" not in text
+
     """Test cases for blockquote handling."""
 
     def test_blockquote_marker_replaced(self):
@@ -1478,6 +1485,7 @@ class TestPreprocessMarkdownEmbedded:
         assert "This is" in text
         assert "bold" in text
         assert "text" in text
+
     """Test cases for horizontal rule handling."""
 
     def test_horizontal_rule_dashes_replaced(self):
@@ -1546,6 +1554,7 @@ class TestPreprocessMarkdownEmbedded:
         assert "Section 1" in text
         assert "Section 2" in text
         assert "Section 3" in text
+
     """Test cases for strikethrough handling."""
 
     def test_strikethrough_replaced_with_spaces(self):
@@ -1615,6 +1624,7 @@ class TestPreprocessMarkdownEmbedded:
         assert "`" not in text
         # Code content should be normalized to noun
         assert "code" in text
+
     """Test cases for bugs discovered during debugging."""
 
     def test_bold_markers_replaced_with_spaces(self):
@@ -1686,7 +1696,7 @@ class TestPreprocessMarkdownEmbedded:
         """Cleaned output should contain no markdown characters."""
         md = "**bold** *italic* `code` [link](url) ![img](pic.png)"
         text, _mapping, _ = preprocess_markdown(md)
-        markdown_chars = ['`', '*', '[', ']', '#', '!', '|']
+        markdown_chars = ["`", "*", "[", "]", "#", "!", "|"]
         found_chars = [ch for ch in text if ch in markdown_chars]
         assert len(found_chars) == 0, f"Found markdown characters in output: {set(found_chars)}"
 
@@ -1793,7 +1803,7 @@ Read **[Getting Started](docs/getting-started.md)** for details.
         assert len(text) == len(md), "Cleaned text length should match original"
 
         # Check no markdown characters
-        markdown_chars = ['`', '*', '[', ']', '#', '!', '|']
+        markdown_chars = ["`", "*", "[", "]", "#", "!", "|"]
         found_chars = [ch for ch in text if ch in markdown_chars]
         assert len(found_chars) == 0, f"Found markdown characters: {set(found_chars)}"
 
@@ -2235,7 +2245,7 @@ class TestHtmlIntegrationTests:
         assert len(text) == len(html)
         assert "Content" in text
         # Tag with attributes should be replaced.
-        assert "id=\"main\"" not in text
+        assert 'id="main"' not in text
 
     def test_document_with_self_closing_tags(self):
         """Test document with self-closing tags."""
@@ -2627,7 +2637,7 @@ class TestSteIntegrationHtml:
 
         # Map back to original
         orig_pos = mapping[hello_pos]
-        assert html[orig_pos:orig_pos+5] == "Hello"
+        assert html[orig_pos : orig_pos + 5] == "Hello"
 
         # Find "World" in cleaned text
         world_pos = cleaned_text.find("World")
@@ -2635,7 +2645,7 @@ class TestSteIntegrationHtml:
 
         # Map back to original
         orig_pos = mapping[world_pos]
-        assert html[orig_pos:orig_pos+5] == "World"
+        assert html[orig_pos : orig_pos + 5] == "World"
 
     def test_html_nested_structure_to_ste(self):
         """Test deeply nested HTML structure through STE100 pipeline."""
@@ -2838,19 +2848,19 @@ The API returns a JSON response with the token."""
         title_pos = cleaned_text.find("Title")
         assert title_pos >= 0
         orig_pos = mapping[title_pos]
-        assert md[orig_pos:orig_pos+5] == "Title"
+        assert md[orig_pos : orig_pos + 5] == "Title"
 
         # Find "Some text" in cleaned text
         some_pos = cleaned_text.find("Some text")
         assert some_pos >= 0
         orig_pos = mapping[some_pos]
-        assert md[orig_pos:orig_pos+9] == "Some text"
+        assert md[orig_pos : orig_pos + 9] == "Some text"
 
         # Find "More text" in cleaned text
         more_pos = cleaned_text.find("More text")
         assert more_pos >= 0
         orig_pos = mapping[more_pos]
-        assert md[orig_pos:orig_pos+9] == "More text"
+        assert md[orig_pos : orig_pos + 9] == "More text"
 
     def test_markdown_inline_elements_to_ste(self):
         """Test Markdown with inline elements through STE100 pipeline."""
@@ -2971,7 +2981,7 @@ Choose the plan that works for you."""
         assert "<ul>" not in cleaned_text
         assert "<li>" not in cleaned_text
         assert "</li>" not in cleaned_text
-        assert "<a href=\"/info\">" not in cleaned_text
+        assert '<a href="/info">' not in cleaned_text
         assert "</a>" not in cleaned_text
 
         # Verify all text content is preserved
@@ -3043,7 +3053,7 @@ class TestPreprocessMarkdownLinkHandling:
 
     def test_link_with_nested_image(self):
         """Badge-style links with nested images should work."""
-        md = '[![CI](img.svg)](http://example.com)'
+        md = "[![CI](img.svg)](http://example.com)"
         text, _offset_map, _regions = preprocess_markdown(md)
         # The entire link should be handled correctly.
         assert "CI" in text  # Link text preserved
@@ -3061,7 +3071,7 @@ class TestPreprocessMarkdownLinkHandling:
 
     def test_link_text_with_special_chars(self):
         """Link text with special characters should be preserved."""
-        md = '[Link & More](http://example.com)'
+        md = "[Link & More](http://example.com)"
         text, _offset_map, _regions = preprocess_markdown(md)
         assert "Link" in text
         assert "More" in text
@@ -3123,7 +3133,7 @@ class TestPreprocessMarkdownDiscoveredBugs:
         """Cleaned output should contain no markdown characters."""
         md = "**bold** *italic* `code` [link](url) ![img](pic.png)"
         text, _mapping, _regions = preprocess_markdown(md)
-        markdown_chars = ['`', '*', '[', ']', '#', '!', '|']
+        markdown_chars = ["`", "*", "[", "]", "#", "!", "|"]
         found_chars = [ch for ch in text if ch in markdown_chars]
         assert len(found_chars) == 0, f"Found markdown characters: {set(found_chars)}"
 
@@ -3195,7 +3205,7 @@ Read **[Getting Started](docs/getting-started.md)** for details.
         assert len(text) == len(md), "Cleaned text length should match original"
 
         # Check no markdown characters
-        markdown_chars = ['`', '*', '[', ']', '#', '!', '|']
+        markdown_chars = ["`", "*", "[", "]", "#", "!", "|"]
         found_chars = [ch for ch in text if ch in markdown_chars]
         assert len(found_chars) == 0, f"Found markdown characters: {set(found_chars)}"
 

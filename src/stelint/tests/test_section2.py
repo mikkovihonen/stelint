@@ -1,4 +1,5 @@
 """Tests for Section 2 (Multi-word nouns) checks."""
+
 import pytest
 import spacy
 
@@ -13,6 +14,7 @@ from stelint.checks_section2 import (
 def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
+
 
 class TestCheckMultiWordNouns:
     """Tests for check_multi_word_nouns function."""
@@ -35,6 +37,7 @@ class TestCheckMultiWordNouns:
         issues = check_multi_word_nouns(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckTooLongTechnicalNouns:
     """Tests for check_too_long_technical_nouns function."""
 
@@ -49,6 +52,7 @@ class TestCheckTooLongTechnicalNouns:
         doc = nlp_model("The filter is clean.")
         issues = check_too_long_technical_nouns(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckTechnicalNounClarity:
     """Tests for check_technical_noun_clarity function."""

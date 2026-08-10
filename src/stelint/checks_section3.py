@@ -25,6 +25,7 @@ How to describe an action
 Rule 3.7: Use an approved verb to describe an action, not a noun or other
           parts of speech.
 """
+
 import re
 
 from .glossary import (
@@ -66,12 +67,14 @@ def check_verb_forms(doc):
             # Check if tag is approved
             if tag not in APPROVED_VERB_TAGS and token.idx not in seen:
                 seen.add(token.idx)
-                issues.append({
-                    "type": "VerbForms",
-                    "message": f"Do not use '{token.text}' ({tag}). Use an approved verb form instead.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "VerbForms",
+                        "message": f"Do not use '{token.text}' ({tag}). Use an approved verb form instead.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -113,12 +116,14 @@ def check_verb_tenses(doc):
                 key = (token.idx, head.idx)
                 if key not in seen:
                     seen.add(key)
-                    issues.append({
-                        "type": "VerbTenses",
-                        "message": "Do not use present perfect tense. Use simple past tense instead.",
-                        "offset": token.idx,
-                        "length": len(token.text) + 1 + len(head.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "VerbTenses",
+                            "message": "Do not use present perfect tense. Use simple past tense instead.",
+                            "offset": token.idx,
+                            "length": len(token.text) + 1 + len(head.text),
+                        }
+                    )
 
         # Check for past perfect (had + past participle)
         elif token.text.lower() == "had" and token.pos_ == "AUX":
@@ -127,12 +132,14 @@ def check_verb_tenses(doc):
                 key = (token.idx, head.idx)
                 if key not in seen:
                     seen.add(key)
-                    issues.append({
-                        "type": "VerbTenses",
-                        "message": "Do not use past perfect tense. Use simple past tense instead.",
-                        "offset": token.idx,
-                        "length": len(token.text) + 1 + len(head.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "VerbTenses",
+                            "message": "Do not use past perfect tense. Use simple past tense instead.",
+                            "offset": token.idx,
+                            "length": len(token.text) + 1 + len(head.text),
+                        }
+                    )
 
         # Check for present/past progressive (is/are/was/were + present participle)
         elif token.text.lower() in ("is", "are", "was", "were") and token.pos_ == "AUX":
@@ -145,24 +152,28 @@ def check_verb_tenses(doc):
                         tense = "present progressive"
                     else:
                         tense = "past progressive"
-                    issues.append({
-                        "type": "VerbTenses",
-                        "message": f"Do not use {tense} tense. Use simple present or simple past tense instead.",
-                        "offset": token.idx,
-                        "length": len(token.text) + 1 + len(head.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "VerbTenses",
+                            "message": f"Do not use {tense} tense. Use simple present or simple past tense instead.",
+                            "offset": token.idx,
+                            "length": len(token.text) + 1 + len(head.text),
+                        }
+                    )
 
         # Check for other complex verb constructions
         # Look for auxiliary verbs followed by main verbs with complex tenses
         elif token.pos_ == "AUX" and token.dep_ != "auxpass":
             head = token.head
             if head.pos_ == "VERB" and head.dep_ == "ROOT" and token.tag_ == "MD" and token.text.lower() not in ("will", "can", "may"):
-                issues.append({
-                    "type": "VerbTenses",
-                    "message": f"Do not use '{token.text}'. Use simple present or simple past tense instead.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "VerbTenses",
+                        "message": f"Do not use '{token.text}'. Use simple present or simple past tense instead.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -212,12 +223,14 @@ def check_past_participle_as_adjective(doc):
             # The main purpose is to ensure they're not used as complex verb constructions
             if not is_in_noun_chunk and not is_attributive and not is_used_as_noun and token.idx not in seen:
                 seen.add(token.idx)
-                issues.append({
-                    "type": "PastParticipleAsAdjective",
-                    "message": f"Do not use '{token.text}' as a verb. Use it as an adjective or in a simple verb form.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "PastParticipleAsAdjective",
+                        "message": f"Do not use '{token.text}' as a verb. Use it as an adjective or in a simple verb form.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -254,20 +267,19 @@ def check_passive_voice(doc):
                     # Check for exceptions
                     verb_phrase = f"{token.text.lower()} {main_verb.text.lower()}"
                     if verb_phrase not in PASSIVE_EXCEPTIONS:
-                        issues.append({
-                            "type": "PassiveVoice",
-                            "message": "Use the active voice.",
-                            "offset": token.idx,
-                            "length": len(token.text) + 1 + len(main_verb.text),
-                        })
+                        issues.append(
+                            {
+                                "type": "PassiveVoice",
+                                "message": "Use the active voice.",
+                                "offset": token.idx,
+                                "length": len(token.text) + 1 + len(main_verb.text),
+                            }
+                        )
 
     # Also check for regex pattern matches that spaCy might miss
     # This catches cases where the participle doesn't have auxpass dependency
     text = doc.text
-    passive_pattern = re.compile(
-        r'\b(is|are|was|were|be|been|being)\s+(\w+(?:ed|en))\b',
-        re.IGNORECASE
-    )
+    passive_pattern = re.compile(r"\b(is|are|was|were|be|been|being)\s+(\w+(?:ed|en))\b", re.IGNORECASE)
 
     for match in passive_pattern.finditer(text):
         phrase = match.group(0).lower()
@@ -275,12 +287,14 @@ def check_passive_voice(doc):
             # Avoid duplicates
             match_key = match.start()
             if not any(abs(issue["offset"] - match_key) < 10 for issue in issues):
-                issues.append({
-                    "type": "PassiveVoice",
-                    "message": "Use the active voice.",
-                    "offset": match.start(),
-                    "length": len(match.group(0)),
-                })
+                issues.append(
+                    {
+                        "type": "PassiveVoice",
+                        "message": "Use the active voice.",
+                        "offset": match.start(),
+                        "length": len(match.group(0)),
+                    }
+                )
 
     return issues
 
@@ -308,20 +322,22 @@ def check_passive_voice_with_agent(doc):
         # Check for passive voice with "by" agent
         if token.text.lower() == "by" and token.pos_ == "ADP" and token.dep_ == "agent":
             # Find the main verb
-                for child in token.head.children:
-                    if child.pos_ == "VERB" and child.dep_ == "ROOT":
-                        # Check if there's an auxpass
-                        has_auxpass = any(c.dep_ == "auxpass" for c in child.children)
-                        if has_auxpass:
-                            key = child.idx
-                            if key not in seen:
-                                seen.add(key)
-                                issues.append({
+            for child in token.head.children:
+                if child.pos_ == "VERB" and child.dep_ == "ROOT":
+                    # Check if there's an auxpass
+                    has_auxpass = any(c.dep_ == "auxpass" for c in child.children)
+                    if has_auxpass:
+                        key = child.idx
+                        if key not in seen:
+                            seen.add(key)
+                            issues.append(
+                                {
                                     "type": "PassiveVoice",
                                     "message": "Use the active voice.",
                                     "offset": child.idx,
                                     "length": len(child.text),
-                                })
+                                }
+                            )
 
     return issues
 
@@ -376,12 +392,14 @@ def check_ing_forms(doc):
                     else:
                         msg = f"Avoid the '-ing' form of a verb. Use: {base}"
 
-                    issues.append({
-                        "type": "IngForms",
-                        "message": msg,
-                        "offset": token.idx,
-                        "length": len(token.text) + 1 + len(head.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "IngForms",
+                            "message": msg,
+                            "offset": token.idx,
+                            "length": len(token.text) + 1 + len(head.text),
+                        }
+                    )
 
     return issues
 
@@ -410,11 +428,13 @@ def check_noun_as_verb(doc):
         for match in matches:
             if match.start() not in seen:
                 seen.add(match.start())
-                issues.append({
-                    "type": "NounAsVerb",
-                    "message": f"Use '{replacement}' instead of '{match.group()}'.",
-                    "offset": match.start(),
-                    "length": len(match.group()),
-                })
+                issues.append(
+                    {
+                        "type": "NounAsVerb",
+                        "message": f"Use '{replacement}' instead of '{match.group()}'.",
+                        "offset": match.start(),
+                        "length": len(match.group()),
+                    }
+                )
 
     return issues

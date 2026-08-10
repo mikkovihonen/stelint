@@ -16,6 +16,7 @@ Rule 5.4: When there is a condition that the reader must know about first, start
 Notes
 Rule 5.5: Write notes only to give information, not instructions.
 """
+
 from .glossary import CONDITIONAL_WORDS, IMPERATIVE_VERB_LEMMAS
 
 
@@ -40,12 +41,14 @@ def check_sentence_length_procedural(doc):
 
         # Check if sentence exceeds 20 words
         if word_count > 20:
-            issues.append({
-                "type": "SentenceLength",
-                "message": f"Keep sentences short. This sentence has {word_count} words. Use a maximum of 20 words.",
-                "offset": sent.start_char,
-                "length": len(sent.text),
-            })
+            issues.append(
+                {
+                    "type": "SentenceLength",
+                    "message": f"Keep sentences short. This sentence has {word_count} words. Use a maximum of 20 words.",
+                    "offset": sent.start_char,
+                    "length": len(sent.text),
+                }
+            )
 
     return issues
 
@@ -80,19 +83,21 @@ def check_multiple_instructions(doc):
         for token in sent:
             # Check if token is a verb in imperative form
             if token.pos_ == "VERB" and token.tag_ == "VB" and token.dep_ in ("ROOT", "conj", "advcl", "cc") and token.dep_ not in ("ccomp", "xcomp"):
-                #conj verbs (like "install" in "Remove ... and install ...") are also imperatives
+                # conj verbs (like "install" in "Remove ... and install ...") are also imperatives
                 imperative_count += 1
                 imperative_tokens.append(token)
 
         # If there are multiple imperative verbs, flag it
         if imperative_count > 1 and sent.start_char not in seen:
             seen.add(sent.start_char)
-            issues.append({
-                "type": "MultipleInstructions",
-                "message": f"Write only one instruction per sentence. This sentence has {imperative_count} instructions. Split into separate sentences.",
-                "offset": sent.start_char,
-                "length": len(sent.text),
-            })
+            issues.append(
+                {
+                    "type": "MultipleInstructions",
+                    "message": f"Write only one instruction per sentence. This sentence has {imperative_count} instructions. Split into separate sentences.",
+                    "offset": sent.start_char,
+                    "length": len(sent.text),
+                }
+            )
 
     return issues
 
@@ -137,23 +142,27 @@ def check_non_imperative_in_procedures(doc):
                 # Non-imperative form at the start
                 if first_content_token.idx not in seen:
                     seen.add(first_content_token.idx)
-                    issues.append({
-                        "type": "NonImperativeInProcedures",
-                        "message": "Use imperative form. Start with a verb in base form (e.g., 'remove', 'install', 'check').",
-                        "offset": first_content_token.idx,
-                        "length": len(first_content_token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "NonImperativeInProcedures",
+                            "message": "Use imperative form. Start with a verb in base form (e.g., 'remove', 'install', 'check').",
+                            "offset": first_content_token.idx,
+                            "length": len(first_content_token.text),
+                        }
+                    )
 
         # Check for modal verbs (must, should, can, will) followed by base form
         for token in sent:
             if token.pos_ == "AUX" and token.tag_ == "MD" and token.text.lower() in ("must", "should", "can", "will") and token.idx not in seen:
                 seen.add(token.idx)
-                issues.append({
-                    "type": "NonImperativeInProcedures",
-                    "message": f"Use imperative form instead of '{token.text}'. Use base form of the verb.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "NonImperativeInProcedures",
+                        "message": f"Use imperative form instead of '{token.text}'. Use base form of the verb.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -197,12 +206,14 @@ def check_descriptive_statement_first(doc):
 
             if first_token and conditional_token and conditional_token.i > first_token.i and conditional_token.idx not in seen:
                 seen.add(conditional_token.idx)
-                issues.append({
-                    "type": "DescriptiveStatementFirst",
-                    "message": f"Write the condition first. Use '{conditional_token.text.lower()} ..., [command]' instead of '[command] ... {conditional_token.text.lower()} ...'.",
-                    "offset": conditional_token.idx,
-                    "length": len(conditional_token.text),
-                })
+                issues.append(
+                    {
+                        "type": "DescriptiveStatementFirst",
+                        "message": f"Write the condition first. Use '{conditional_token.text.lower()} ..., [command]' instead of '[command] ... {conditional_token.text.lower()} ...'.",
+                        "offset": conditional_token.idx,
+                        "length": len(conditional_token.text),
+                    }
+                )
 
     return issues
 
@@ -247,12 +258,14 @@ def check_notes(doc):
                             if lemma in IMPERATIVE_VERB_LEMMAS:
                                 if sent.start_char not in seen:
                                     seen.add(sent.start_char)
-                                    issues.append({
-                                        "type": "NoteContainsInstruction",
-                                        "message": f"Notes must not contain instructions. Move '{token.text}' instruction to a work step.",
-                                        "offset": sent.start_char,
-                                        "length": len(sent.text),
-                                    })
+                                    issues.append(
+                                        {
+                                            "type": "NoteContainsInstruction",
+                                            "message": f"Notes must not contain instructions. Move '{token.text}' instruction to a work step.",
+                                            "offset": sent.start_char,
+                                            "length": len(sent.text),
+                                        }
+                                    )
                                 break
 
     return issues

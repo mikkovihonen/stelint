@@ -1,4 +1,5 @@
 """Tests for Section 7 (Safety instructions) checks."""
+
 import pytest
 import spacy
 
@@ -12,6 +13,7 @@ from stelint.checks_section7 import (
 def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
+
 
 class TestCheckSafetyInstructionFormat:
     """Tests for check_safety_instruction_format function."""
@@ -33,6 +35,7 @@ class TestCheckSafetyInstructionFormat:
         doc = nlp_model("DANGER: High voltage. Do not touch.")
         issues = check_safety_instruction_format(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckSafetyInstructionExplanation:
     """Tests for check_safety_instruction_explanation function."""

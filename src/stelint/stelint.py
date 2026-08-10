@@ -4,6 +4,7 @@ Reads from file or stdin, outputs results in Vale-compatible format.
 
 This is the main entry point that imports all check functions from section-specific modules.
 """
+
 import sys
 
 import spacy
@@ -140,6 +141,7 @@ def main():
         from pathlib import Path
 
         import stelint.glossary as glossary_mod
+
         cfg = Path(config_path)
         glossary_mod.set_config_path(cfg)
         glossary_mod._load_constants(cfg)
@@ -150,7 +152,7 @@ def main():
     if len(sys.argv) > 1:
         filepath = sys.argv[1]
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 text = f.read()
         except FileNotFoundError:
             print(f"Error: File '{filepath}' not found.", file=sys.stderr)
@@ -169,6 +171,7 @@ def main():
     # cleaned-text positions back to original-text positions, and a list of
     # non-text regions with their types.
     from .preprocess_text import preprocess_markdown
+
     cleaned_text, offset_map, regions = preprocess_markdown(text)
 
     doc = nlp(cleaned_text)
@@ -210,9 +213,7 @@ def main():
             for other in nodes:
                 if node is other:
                     continue
-                if (node["start"] <= other["start"] and
-                    node["end"] >= other["end"] and
-                    (node["start"] != other["start"] or node["end"] != other["end"])):
+                if node["start"] <= other["start"] and node["end"] >= other["end"] and (node["start"] != other["start"] or node["end"] != other["end"]):
                     node["children"].append(other)
 
         # Return root nodes (not contained in any other)
@@ -222,9 +223,7 @@ def main():
             for other in nodes:
                 if other is node:
                     continue
-                if (other["start"] <= node["start"] and
-                    other["end"] >= node["end"] and
-                    (other["start"] != node["start"] or other["end"] != node["end"])):
+                if other["start"] <= node["start"] and other["end"] >= node["end"] and (other["start"] != node["start"] or other["end"] != node["end"]):
                     is_child = True
                     break
             if not is_child:
@@ -244,7 +243,7 @@ def main():
     def _find_node_at_position(tree_roots: list, cleaned_offset: int):
         """Find the innermost node containing the given position."""
         best_match = None
-        best_size = float('inf')
+        best_size = float("inf")
         for root in tree_roots:
             node = _find_node_in_tree(root, cleaned_offset)
             if node:
@@ -277,7 +276,7 @@ def main():
                     _s1, e1 = bold_regions[i]
                     s2, _e2 = bold_regions[i + 1]
                     # Check if they're on the same line (no newline between them)
-                    if '\n' not in cleaned_text[e1:s2] and e1 <= cleaned_offset < s2:
+                    if "\n" not in cleaned_text[e1:s2] and e1 <= cleaned_offset < s2:
                         return True
 
         # Check tree-based suppression
@@ -418,7 +417,7 @@ def main():
     # offset_map, then convert to line:col in the original file.
     # Annotate each error with the region type (header, table_row, etc.)
     # when the error occurs in a non-prose region.
-    original_lines = text.split('\n')
+    original_lines = text.split("\n")
 
     for issue in all_issues:
         cleaned_offset = issue["offset"]
@@ -452,7 +451,7 @@ def main():
             continue
 
         # Collapse consecutive whitespace in the message to a single space.
-        message = ' '.join(issue['message'].split())
+        message = " ".join(issue["message"].split())
 
         # Add region context to the message if the error is in a non-prose region.
         if region_type:

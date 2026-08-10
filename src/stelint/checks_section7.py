@@ -14,6 +14,7 @@ Rule 7.2: Start a safety instruction with a clear and accurate command or
           condition.
 Rule 7.3: Give an explanation to show the risk or possible result.
 """
+
 import spacy
 
 from .glossary import HIGH_RISK_SAFETY_KEYWORDS, RISK_INDICATORS, SAFETY_KEYWORDS
@@ -76,19 +77,21 @@ def check_safety_instruction_format(doc):
                 j += 1
 
             # Check if the instruction has content after the keyword
-            after_label = instruction_text[len(keyword) + 1:].strip()
+            after_label = instruction_text[len(keyword) + 1 :].strip()
 
             # Rule 7.1: Check if the label is present (already verified above)
             # Rule 7.2: Check if there's a command or condition after the label
             if not after_label:
                 if first_token.idx not in seen:
                     seen.add(first_token.idx)
-                    issues.append({
-                        "type": "SafetyInstructionFormat",
-                        "message": f"{keyword} label is empty. Add a clear and accurate command or condition.",
-                        "offset": first_token.idx,
-                        "length": len(first_token.text) + 1,
-                    })
+                    issues.append(
+                        {
+                            "type": "SafetyInstructionFormat",
+                            "message": f"{keyword} label is empty. Add a clear and accurate command or condition.",
+                            "offset": first_token.idx,
+                            "length": len(first_token.text) + 1,
+                        }
+                    )
             else:
                 # Check if the command/condition is in imperative form
                 instruction_doc = nlp(after_label)
@@ -102,12 +105,14 @@ def check_safety_instruction_format(doc):
                 # If no imperative verb found, flag it
                 if not has_imperative and keyword in HIGH_RISK_SAFETY_KEYWORDS and first_token.idx not in seen:
                     seen.add(first_token.idx)
-                    issues.append({
-                        "type": "SafetyInstructionFormat",
-                        "message": f"{keyword} instruction should start with a clear command in imperative form.",
-                        "offset": first_token.idx,
-                        "length": len(first_token.text) + 1,
-                    })
+                    issues.append(
+                        {
+                            "type": "SafetyInstructionFormat",
+                            "message": f"{keyword} instruction should start with a clear command in imperative form.",
+                            "offset": first_token.idx,
+                            "length": len(first_token.text) + 1,
+                        }
+                    )
 
     return issues
 
@@ -185,12 +190,14 @@ def check_safety_instruction_explanation(doc):
             # If no explanation found, flag it
             if not has_explanation and first_token.idx not in seen:
                 seen.add(first_token.idx)
-                issues.append({
-                    "type": "SafetyInstructionExplanation",
-                    "message": "Add an explanation to show the risk or possible result.",
-                    "offset": first_token.idx,
-                    "length": len(instruction_text),
-                })
+                issues.append(
+                    {
+                        "type": "SafetyInstructionExplanation",
+                        "message": "Add an explanation to show the risk or possible result.",
+                        "offset": first_token.idx,
+                        "length": len(instruction_text),
+                    }
+                )
 
     return issues
 

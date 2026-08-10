@@ -1,4 +1,5 @@
 """Tests for Section 5 (Procedural writing) checks."""
+
 import pytest
 import spacy
 
@@ -16,6 +17,7 @@ def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
 
+
 class TestCheckSentenceLengthProcedural:
     """Tests for check_sentence_length_procedural function."""
 
@@ -30,6 +32,7 @@ class TestCheckSentenceLengthProcedural:
         doc = nlp_model("Check the filter.")
         issues = check_sentence_length_procedural(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckMultipleInstructions:
     """Tests for check_multiple_instructions function."""
@@ -46,6 +49,7 @@ class TestCheckMultipleInstructions:
         issues = check_multiple_instructions(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckNonImperativeInProcedures:
     """Tests for check_non_imperative_in_procedures function."""
 
@@ -61,6 +65,7 @@ class TestCheckNonImperativeInProcedures:
         issues = check_non_imperative_in_procedures(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckDescriptiveStatementFirst:
     """Tests for check_descriptive_statement_first function."""
 
@@ -75,6 +80,7 @@ class TestCheckDescriptiveStatementFirst:
         doc = nlp_model("If the filter is dirty, check it.")
         issues = check_descriptive_statement_first(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckNotes:
     """Tests for check_notes function."""

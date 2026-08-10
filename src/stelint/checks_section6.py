@@ -15,6 +15,7 @@ Rule 6.4: Use paragraphs to show related information.
 Rule 6.5: Make sure that each paragraph has only one topic.
 Rule 6.6: Make sure that no paragraph has more than six sentences.
 """
+
 import numpy as np
 
 from .glossary import COMMON_DETERMINERS
@@ -22,6 +23,7 @@ from .glossary import COMMON_DETERMINERS
 # Load sense2vec model once at module level for reuse
 try:
     from sense2vec import Sense2Vec
+
     s2v_model = Sense2Vec().from_disk(".pi-container/agent/extensions/prosecco/spacy/s2v")
 except (ImportError, OSError, FileNotFoundError):
     s2v_model = None
@@ -59,12 +61,14 @@ def check_information_structure(doc):
                 has_subject = any(c.dep_ == "nsubj" for c in token.children)
                 if not has_subject and token.tag_ in ("VB", "VBP") and token.idx not in seen:
                     seen.add(token.idx)
-                    issues.append({
-                        "type": "ImperativeInDescription",
-                        "message": "Do not use imperative form in descriptive writing. Use descriptive sentences instead.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "ImperativeInDescription",
+                            "message": "Do not use imperative form in descriptive writing. Use descriptive sentences instead.",
+                            "offset": token.idx,
+                            "length": len(token.text),
+                        }
+                    )
 
     return issues
 
@@ -84,12 +88,7 @@ def _get_dependency_signature(token):
     Returns:
         tuple: Dependency signature
     """
-    sig = [
-        token.pos_,
-        token.dep_,
-        token.head.pos_,
-        tuple(sorted([c.dep_ for c in token.children if c.dep_ not in ('det', 'punct', 'poss', 'amod', 'nummod', 'quantmod', 'nn')]))
-    ]
+    sig = [token.pos_, token.dep_, token.head.pos_, tuple(sorted([c.dep_ for c in token.children if c.dep_ not in ("det", "punct", "poss", "amod", "nummod", "quantmod", "nn")]))]
     return tuple(sig)
 
 
@@ -115,10 +114,7 @@ def _get_noun_chunk_modifiers(token):
             break
 
     # Return the modifier pattern of the chunk head
-    chunk_modifiers = sorted([
-        c.dep_ for c in chunk_head.children
-        if c.dep_ not in ('det', 'punct', 'poss', 'amod', 'nummod', 'quantmod', 'nn')
-    ])
+    chunk_modifiers = sorted([c.dep_ for c in chunk_head.children if c.dep_ not in ("det", "punct", "poss", "amod", "nummod", "quantmod", "nn")])
 
     return tuple(chunk_modifiers)
 
@@ -137,10 +133,12 @@ def _get_wordnet_synset_count(lemma):
     """
     try:
         import nltk
+
         nltk.download("wordnet", quiet=True)
         nltk.download("punkt", quiet=True)
         nltk.download("punkt_tab", quiet=True)
         from nltk.corpus import wordnet as wn
+
         return len(wn.synsets(lemma))
     except (ImportError, OSError):
         return 0
@@ -283,12 +281,14 @@ def check_key_words(doc):
         # If a term appears multiple times, check for polysemy
         if len(tokens) > 1 and _is_polysemous(term, tokens) and tokens[0].idx not in seen:
             seen.add(tokens[0].idx)
-            issues.append({
-                "type": "KeyWords",
-                "message": f"Term '{term}' is used in multiple different contexts. Consider using different terms for clarity.",
-                "offset": tokens[0].idx,
-                "length": len(tokens[0].text),
-            })
+            issues.append(
+                {
+                    "type": "KeyWords",
+                    "message": f"Term '{term}' is used in multiple different contexts. Consider using different terms for clarity.",
+                    "offset": tokens[0].idx,
+                    "length": len(tokens[0].text),
+                }
+            )
 
     return issues
 
@@ -314,12 +314,14 @@ def check_sentence_length_descriptive(doc):
 
         # Check if sentence exceeds 25 words (descriptive limit)
         if word_count > 25:
-            issues.append({
-                "type": "SentenceLength",
-                "message": f"Keep sentences short. This sentence has {word_count} words. Use a maximum of 25 words.",
-                "offset": sent.start_char,
-                "length": len(sent.text),
-            })
+            issues.append(
+                {
+                    "type": "SentenceLength",
+                    "message": f"Keep sentences short. This sentence has {word_count} words. Use a maximum of 25 words.",
+                    "offset": sent.start_char,
+                    "length": len(sent.text),
+                }
+            )
 
     return issues
 
@@ -342,7 +344,7 @@ def check_paragraph_structure(doc):
     seen = set()
 
     # Split text into paragraphs
-    paragraphs = doc.text.split('\n\n')
+    paragraphs = doc.text.split("\n\n")
 
     for para_idx, para in enumerate(paragraphs):
         if not para.strip():
@@ -366,12 +368,14 @@ def check_paragraph_structure(doc):
         # If the paragraph has too many different topics, flag it
         if len(topics) > 3 and para_start not in seen:
             seen.add(para_start)
-            issues.append({
-                "type": "ParagraphStructure",
-                "message": f"Paragraph contains {len(topics)} different topics. Use paragraphs to show related information.",
-                "offset": para_start,
-                "length": len(para),
-            })
+            issues.append(
+                {
+                    "type": "ParagraphStructure",
+                    "message": f"Paragraph contains {len(topics)} different topics. Use paragraphs to show related information.",
+                    "offset": para_start,
+                    "length": len(para),
+                }
+            )
 
     return issues
 
@@ -394,7 +398,7 @@ def check_paragraph_topic(doc):
     seen = set()
 
     # Split text into paragraphs
-    paragraphs = doc.text.split('\n\n')
+    paragraphs = doc.text.split("\n\n")
 
     for para_idx, para in enumerate(paragraphs):
         if not para.strip():
@@ -423,12 +427,14 @@ def check_paragraph_topic(doc):
         # If the paragraph has more than 2 different main subjects, flag it
         if len(subjects) > 2 and para_start not in seen:
             seen.add(para_start)
-            issues.append({
-                "type": "ParagraphTopic",
-                "message": f"Paragraph has {len(subjects)} different topics. Each paragraph should have only one topic.",
-                "offset": para_start,
-                "length": len(para),
-            })
+            issues.append(
+                {
+                    "type": "ParagraphTopic",
+                    "message": f"Paragraph has {len(subjects)} different topics. Each paragraph should have only one topic.",
+                    "offset": para_start,
+                    "length": len(para),
+                }
+            )
 
     return issues
 
@@ -451,7 +457,7 @@ def check_paragraph_length(doc):
     issues = []
 
     # Split text into paragraphs
-    paragraphs = doc.text.split('\n\n')
+    paragraphs = doc.text.split("\n\n")
 
     for para_idx, para in enumerate(paragraphs):
         if not para.strip():
@@ -464,12 +470,14 @@ def check_paragraph_length(doc):
         if sentence_count > 6:
             # Find the start of the paragraph in the original text
             para_start = sum(len(p) + 2 for p in paragraphs[:para_idx])  # +2 for \n\n
-            issues.append({
-                "type": "ParagraphLength",
-                "message": f"Paragraph has {sentence_count} sentences. Use no more than 6 sentences per paragraph.",
-                "offset": para_start,
-                "length": len(para),
-            })
+            issues.append(
+                {
+                    "type": "ParagraphLength",
+                    "message": f"Paragraph has {sentence_count} sentences. Use no more than 6 sentences per paragraph.",
+                    "offset": para_start,
+                    "length": len(para),
+                }
+            )
 
     return issues
 
@@ -477,6 +485,7 @@ def check_paragraph_length(doc):
 # Load spaCy model for paragraph analysis
 try:
     import spacy as spacy_module
+
     nlp = spacy_module.load("en_core_web_sm")
 except (ImportError, OSError, RuntimeError):
     nlp = None

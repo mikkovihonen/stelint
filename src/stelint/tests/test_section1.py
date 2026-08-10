@@ -1,4 +1,5 @@
 """Tests for Section 1 (Words) checks."""
+
 import pytest
 import spacy
 
@@ -24,6 +25,7 @@ def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
 
+
 class TestCheckApprovedWords:
     """Tests for check_approved_words function."""
 
@@ -45,6 +47,7 @@ class TestCheckApprovedWords:
         issues = check_approved_words(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckPartOfSpeech:
     """Tests for check_part_of_speech function."""
 
@@ -59,6 +62,7 @@ class TestCheckPartOfSpeech:
         doc = nlp_model("Check the filter.")
         issues = check_part_of_speech(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckApprovedMeaning:
     """Tests for check_approved_meaning function."""
@@ -75,6 +79,7 @@ class TestCheckApprovedMeaning:
         issues = check_approved_meaning(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckApprovedForms:
     """Tests for check_approved_forms function."""
 
@@ -89,6 +94,7 @@ class TestCheckApprovedForms:
         doc = nlp_model("The filter cleaned.")
         issues = check_approved_forms(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckTechnicalNounCategory:
     """Tests for check_technical_noun_category function."""
@@ -105,6 +111,7 @@ class TestCheckTechnicalNounCategory:
         issues = check_technical_noun_category(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckNonApprovedAsTechnical:
     """Tests for check_non_approved_as_technical function."""
 
@@ -119,6 +126,7 @@ class TestCheckNonApprovedAsTechnical:
         doc = nlp_model("The filter assembly.")
         issues = check_non_approved_as_technical(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckTechnicalNounAsVerb:
     """Tests for check_technical_noun_as_verb function."""
@@ -135,6 +143,7 @@ class TestCheckTechnicalNounAsVerb:
         issues = check_technical_noun_as_verb(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckTechnicalNounApproval:
     """Tests for check_technical_noun_approval function."""
 
@@ -143,6 +152,7 @@ class TestCheckTechnicalNounApproval:
         doc = nlp_model("The pump assembly is leaky.")
         issues = check_technical_noun_approval(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckRegionalSlangJargon:
     """Tests for check_regional_slang_jargon function."""
@@ -159,6 +169,7 @@ class TestCheckRegionalSlangJargon:
         issues = check_regional_slang_jargon(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckConsistentTechnicalNouns:
     """Tests for check_consistent_technical_nouns function."""
 
@@ -167,6 +178,7 @@ class TestCheckConsistentTechnicalNouns:
         doc = nlp_model("The body is secure. The hull is tight.")
         issues = check_consistent_technical_nouns(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckTechnicalVerbCategory:
     """Tests for check_technical_verb_category function."""
@@ -177,6 +189,7 @@ class TestCheckTechnicalVerbCategory:
         issues = check_technical_verb_category(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckTechnicalVerbAsNoun:
     """Tests for check_technical_verb_as_noun function."""
 
@@ -185,6 +198,7 @@ class TestCheckTechnicalVerbAsNoun:
         doc = nlp_model("The run was successful.")
         issues = check_technical_verb_as_noun(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckBritishEnglish:
     """Tests for check_british_english function."""

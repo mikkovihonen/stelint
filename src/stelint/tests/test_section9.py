@@ -1,4 +1,5 @@
 """Tests for Section 9 (Writing practices) checks."""
+
 import pytest
 import spacy
 
@@ -18,6 +19,7 @@ def nlp_model():
     """Load spaCy model once for all tests."""
     return spacy.load("en_core_web_sm")
 
+
 class TestCheckWordUsage:
     """Tests for check_word_usage function."""
 
@@ -32,6 +34,7 @@ class TestCheckWordUsage:
         doc = nlp_model("Check the filter.")
         issues = check_word_usage(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckConsistentStyle:
     """Tests for check_consistent_style function."""
@@ -48,6 +51,7 @@ class TestCheckConsistentStyle:
         issues = check_consistent_style(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckPhrasalVerbs:
     """Tests for check_phrasal_verbs function."""
 
@@ -63,6 +67,7 @@ class TestCheckPhrasalVerbs:
         issues = check_phrasal_verbs(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckConsistentTerminology:
     """Tests for check_consistent_terminology function."""
 
@@ -72,6 +77,7 @@ class TestCheckConsistentTerminology:
         issues = check_consistent_terminology(doc)
         assert isinstance(issues, list)
 
+
 class TestCheckDifferentSentenceConstructions:
     """Tests for check_different_sentence_constructions function."""
 
@@ -80,6 +86,7 @@ class TestCheckDifferentSentenceConstructions:
         doc = nlp_model("The filter is clean. The pump is leaky.")
         issues = check_different_sentence_constructions(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckWordForWordReplacement:
     """Tests for check_word_for_word_replacement function."""
@@ -95,6 +102,7 @@ class TestCheckWordForWordReplacement:
         doc = nlp_model("The filter is clean. The pump is dry.")
         issues = check_word_for_word_replacement(doc)
         assert isinstance(issues, list)
+
 
 class TestCheckNonApprovedWords:
     """Tests for check_non_approved_words function."""

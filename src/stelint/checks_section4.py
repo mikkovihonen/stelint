@@ -16,6 +16,7 @@ Rule 4.4: Use connecting words and connecting phrases to connect sentences that 
 Articles and demonstrative adjectives
 Rule 4.5: When applicable, use an article (the, a, an) or a demonstrative adjective (this, these) before a noun or a multi-word noun.
 """
+
 from .glossary import (
     CONNECTING_WORDS,
     CONTRACTIONS,
@@ -58,12 +59,14 @@ def check_short_sentences(doc):
 
             # Flag sentences that are both long and complex
             if max_depth > 3 or word_count > 25:
-                issues.append({
-                    "type": "ShortSentences",
-                    "message": f"Keep sentences short and clear. This sentence has {word_count} words and a dependency depth of {max_depth}. Break it into shorter sentences.",
-                    "offset": sent.start_char,
-                    "length": len(sent.text),
-                })
+                issues.append(
+                    {
+                        "type": "ShortSentences",
+                        "message": f"Keep sentences short and clear. This sentence has {word_count} words and a dependency depth of {max_depth}. Break it into shorter sentences.",
+                        "offset": sent.start_char,
+                        "length": len(sent.text),
+                    }
+                )
 
     return issues
 
@@ -87,12 +90,14 @@ def check_contractions(doc):
             prev = doc[i - 1]
             contraction = prev.text + "n't"
             if contraction.lower() in CONTRACTIONS:
-                issues.append({
-                    "type": "Contractions",
-                    "message": f"Do not use '{contraction}'. Write the full form.",
-                    "offset": prev.idx,
-                    "length": len(contraction),
-                })
+                issues.append(
+                    {
+                        "type": "Contractions",
+                        "message": f"Do not use '{contraction}'. Write the full form.",
+                        "offset": prev.idx,
+                        "length": len(contraction),
+                    }
+                )
 
     return issues
 
@@ -125,12 +130,14 @@ def check_vertical_lists(doc):
         # If a sentence has many items, suggest a vertical list
         if conjunction_count >= 2 and noun_count >= 4 and sent.start_char not in seen:
             seen.add(sent.start_char)
-            issues.append({
-                "type": "VerticalLists",
-                "message": f"This sentence has {conjunction_count} conjunctions and {noun_count} nouns. Consider using a vertical list instead.",
-                "offset": sent.start_char,
-                "length": len(sent.text),
-            })
+            issues.append(
+                {
+                    "type": "VerticalLists",
+                    "message": f"This sentence has {conjunction_count} conjunctions and {noun_count} nouns. Consider using a vertical list instead.",
+                    "offset": sent.start_char,
+                    "length": len(sent.text),
+                }
+            )
 
     return issues
 
@@ -200,12 +207,14 @@ def check_connecting_words(doc):
         # If sentences are related but don't have a connecting word, flag it
         if are_related and not has_connecting_word and sent1.start_char not in seen:
             seen.add(sent1.start_char)
-            issues.append({
-                "type": "ConnectingWords",
-                "message": "Consider adding a connecting word or phrase between these related sentences.",
-                "offset": sent1.end_char,
-                "length": len(sent1.text) + len(sent2.text),
-            })
+            issues.append(
+                {
+                    "type": "ConnectingWords",
+                    "message": "Consider adding a connecting word or phrase between these related sentences.",
+                    "offset": sent1.end_char,
+                    "length": len(sent1.text) + len(sent2.text),
+                }
+            )
 
     return issues
 
@@ -233,10 +242,7 @@ def check_missing_articles(doc):
         # Check for nouns that don't have a determiner
         if token.pos_ == "NOUN" and token.dep_ != "compound":
             # Check if the noun has a determiner (article or demonstrative)
-            has_determiner = any(
-                c.dep_ == "det" and c.pos_ == "DET"
-                for c in token.children
-            )
+            has_determiner = any(c.dep_ == "det" and c.pos_ == "DET" for c in token.children)
 
             # Skip proper nouns (these don't need articles)
             if token.pos_ == "PROPN":
@@ -253,12 +259,14 @@ def check_missing_articles(doc):
             # If the noun doesn't have a determiner and is not a proper noun, flag it
             if not has_determiner and token.idx not in seen:
                 seen.add(token.idx)
-                issues.append({
-                    "type": "MissingArticles",
-                    "message": f"Add article or demonstrative adjective before '{token.text}'. Use 'the', 'a', 'an', 'this', or 'these' before the noun.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "MissingArticles",
+                        "message": f"Add article or demonstrative adjective before '{token.text}'. Use 'the', 'a', 'an', 'this', or 'these' before the noun.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
 
     return issues
 
@@ -289,12 +297,14 @@ def check_article_usage(doc):
                 next_token = doc[token.i + 1]
                 if (next_token.pos_ == "NOUN" or next_token.pos_ == "ADJ") and next_token.text.lower().startswith(("a", "e", "i", "o", "u")) and token.idx not in seen:
                     seen.add(token.idx)
-                    issues.append({
-                        "type": "ArticleUsage",
-                        "message": f"Use 'an' instead of 'a' before '{next_token.text}'.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "ArticleUsage",
+                            "message": f"Use 'an' instead of 'a' before '{next_token.text}'.",
+                            "offset": token.idx,
+                            "length": len(token.text),
+                        }
+                    )
 
             # Check for incorrect demonstrative adjective usage
             elif token.text.lower() in ("this", "that", "these", "those") and token.dep_ == "det" and token.head.pos_ == "NOUN":
@@ -303,21 +313,25 @@ def check_article_usage(doc):
                 if token.text.lower() in ("this", "that") and head.tag_ == "NNS":
                     if token.idx not in seen:
                         seen.add(token.idx)
-                        issues.append({
-                            "type": "ArticleUsage",
-                            "message": f"Use '{token.text.replace('this', 'these').replace('that', 'those')}' instead of '{token.text}' for plural noun '{head.text}'.",
-                            "offset": token.idx,
-                            "length": len(token.text),
-                        })
+                        issues.append(
+                            {
+                                "type": "ArticleUsage",
+                                "message": f"Use '{token.text.replace('this', 'these').replace('that', 'those')}' instead of '{token.text}' for plural noun '{head.text}'.",
+                                "offset": token.idx,
+                                "length": len(token.text),
+                            }
+                        )
                 # Check if plural demonstrative + singular noun
                 elif token.text.lower() in ("these", "those") and head.tag_ == "NN" and head.tag_ != "NNS" and token.idx not in seen:
                     seen.add(token.idx)
-                    issues.append({
-                        "type": "ArticleUsage",
-                        "message": f"Use '{token.text.replace('these', 'this').replace('those', 'that')}' instead of '{token.text}' for singular noun '{head.text}'.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "ArticleUsage",
+                            "message": f"Use '{token.text.replace('these', 'this').replace('those', 'that')}' instead of '{token.text}' for singular noun '{head.text}'.",
+                            "offset": token.idx,
+                            "length": len(token.text),
+                        }
+                    )
 
     return issues
 
@@ -339,12 +353,14 @@ def check_sentence_length(doc):
     for sent in doc.sents:
         word_count = sum(1 for t in sent if t.pos_ != "PUNCT")
         if word_count > 20:
-            issues.append({
-                "type": "SentenceLength",
-                "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
-                "offset": sent.start_char,
-                "length": len(sent.text),
-            })
+            issues.append(
+                {
+                    "type": "SentenceLength",
+                    "message": f"Keep sentences short. This sentence has {word_count} words. Aim for 20 words or fewer.",
+                    "offset": sent.start_char,
+                    "length": len(sent.text),
+                }
+            )
     return issues
 
 
@@ -368,16 +384,18 @@ def check_forbidden_modals(doc):
 
     for token in doc:
         if token.text.lower() in FORBIDDEN_MODALS and token.pos_ == "AUX" and token.tag_ == "MD":
-                # Skip if negated (e.g., "may not", "should not")
-                has_neg = any(c.dep_ == "neg" for c in token.children)
-                if not has_neg and token.idx not in seen:
-                    seen.add(token.idx)
-                    rep = FORBIDDEN_MODALS[token.text.lower()]
-                    issues.append({
+            # Skip if negated (e.g., "may not", "should not")
+            has_neg = any(c.dep_ == "neg" for c in token.children)
+            if not has_neg and token.idx not in seen:
+                seen.add(token.idx)
+                rep = FORBIDDEN_MODALS[token.text.lower()]
+                issues.append(
+                    {
                         "type": "Shall",
                         "message": f"Use '{rep}' instead of '{token.text}'",
                         "offset": token.idx,
                         "length": len(token.text),
-                    })
+                    }
+                )
 
     return issues

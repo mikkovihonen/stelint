@@ -13,6 +13,7 @@ Rule 9.3: When you use two words together, do not make phrasal verbs.
 Consistent style
 Rule 9.4: When you select terminology or wording, always use a consistent style.
 """
+
 import spacy
 
 from .glossary import (
@@ -55,12 +56,14 @@ def check_different_sentence_constructions(doc):
                     seen.add(token.idx)
                     replacement = main_verb.lemma_
 
-                    issues.append({
-                        "type": "DifferentSentenceConstructions",
-                        "message": f"Use a different sentence construction. Use '{replacement}' instead of 'must be {main_verb.text}'.",
-                        "offset": token.idx,
-                        "length": len(token.text) + 1 + len(next_token.text) + 1 + len(main_verb.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "DifferentSentenceConstructions",
+                            "message": f"Use a different sentence construction. Use '{replacement}' instead of 'must be {main_verb.text}'.",
+                            "offset": token.idx,
+                            "length": len(token.text) + 1 + len(next_token.text) + 1 + len(main_verb.text),
+                        }
+                    )
 
     return issues
 
@@ -99,12 +102,14 @@ def check_word_for_word_replacement(doc):
         for match in matches:
             if match.start() not in seen:
                 seen.add(match.start())
-                issues.append({
-                    "type": "WordForWordReplacement",
-                    "message": f"Word-for-word replacement changes the meaning. Use '{replacement}' instead of '{match.group()}'.",
-                    "offset": match.start(),
-                    "length": len(match.group()),
-                })
+                issues.append(
+                    {
+                        "type": "WordForWordReplacement",
+                        "message": f"Word-for-word replacement changes the meaning. Use '{replacement}' instead of '{match.group()}'.",
+                        "offset": match.start(),
+                        "length": len(match.group()),
+                    }
+                )
 
     return issues
 
@@ -208,23 +213,26 @@ def check_word_usage(doc):
                     phrase = (token.lemma_, next_token.lemma_)
                     replacement = _get_restricted_verb_replacement(phrase)
                     if replacement:
-                        issues.append({
-                            "type": "WordUsage",
-                            "message": f"Use '{replacement}' instead of '{token.text} {next_token.text}'.",
-                            "offset": token.idx,
-                            "length": len(token.text) + 1 + len(next_token.text),
-                        })
+                        issues.append(
+                            {
+                                "type": "WordUsage",
+                                "message": f"Use '{replacement}' instead of '{token.text} {next_token.text}'.",
+                                "offset": token.idx,
+                                "length": len(token.text) + 1 + len(next_token.text),
+                            }
+                        )
                 elif "replacement" in pattern_config:
                     # Use static replacement message
-                    issues.append({
-                        "type": "WordUsage",
-                        "message": pattern_config["replacement"],
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "WordUsage",
+                            "message": pattern_config["replacement"],
+                            "offset": token.idx,
+                            "length": len(token.text),
+                        }
+                    )
 
     return issues
-
 
 
 def check_phrasal_verbs(doc):
@@ -262,12 +270,14 @@ def check_phrasal_verbs(doc):
                 if key not in seen:
                     seen.add(key)
                     rep = PHRASAL_VERBS[phrase]
-                    issues.append({
-                        "type": "PhrasalVerbs",
-                        "message": f"Do not use phrasal verb '{token.text} {next_token.text}'. Use '{rep}' instead.",
-                        "offset": token.idx,
-                        "length": len(token.text) + 1 + len(next_token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "PhrasalVerbs",
+                            "message": f"Do not use phrasal verb '{token.text} {next_token.text}'. Use '{rep}' instead.",
+                            "offset": token.idx,
+                            "length": len(token.text) + 1 + len(next_token.text),
+                        }
+                    )
 
         # Check 3-word phrasal verbs
         if i + 2 < len(tokens):
@@ -279,12 +289,14 @@ def check_phrasal_verbs(doc):
                 if key not in seen:
                     seen.add(key)
                     rep = PHRASAL_VERBS[phrase]
-                    issues.append({
-                        "type": "PhrasalVerbs",
-                        "message": f"Do not use phrasal verb '{token.text} {next_token.text} {next_next_token.text}'. Use '{rep}' instead.",
-                        "offset": token.idx,
-                        "length": len(token.text) + 1 + len(next_token.text) + 1 + len(next_next_token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "PhrasalVerbs",
+                            "message": f"Do not use phrasal verb '{token.text} {next_token.text} {next_next_token.text}'. Use '{rep}' instead.",
+                            "offset": token.idx,
+                            "length": len(token.text) + 1 + len(next_token.text) + 1 + len(next_next_token.text),
+                        }
+                    )
 
     return issues
 
@@ -311,12 +323,14 @@ def check_consistent_style(doc):
 
     # For simplicity, we'll just flag the rule
     # A full implementation would need to track terminology throughout the document
-    issues.append({
-        "type": "ConsistentStyle",
-        "message": "Use consistent terminology throughout the document. Do not use different terms for the same item.",
-        "offset": 0,
-        "length": len(text),
-    })
+    issues.append(
+        {
+            "type": "ConsistentStyle",
+            "message": "Use consistent terminology throughout the document. Do not use different terms for the same item.",
+            "offset": 0,
+            "length": len(text),
+        }
+    )
 
     return issues
 
@@ -357,12 +371,14 @@ def check_consistent_terminology(doc):
                 replacement = CONSISTENT_STYLE_PATTERNS[chunk_text]
                 if chunk.start_char not in seen:
                     seen.add(chunk.start_char)
-                    issues.append({
-                        "type": "ConsistentTerminology",
-                        "message": f"Use consistent terminology. Use '{replacement}' instead of '{chunk.text}'.",
-                        "offset": chunk.start_char,
-                        "length": len(chunk.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "ConsistentTerminology",
+                            "message": f"Use consistent terminology. Use '{replacement}' instead of '{chunk.text}'.",
+                            "offset": chunk.start_char,
+                            "length": len(chunk.text),
+                        }
+                    )
 
     # Check for technical nouns that should be part of compound terms
     # This generalizes the body/assembly pattern to any noun that might need a compound form
@@ -389,14 +405,18 @@ def check_consistent_terminology(doc):
                 # it might need to be part of a compound term
                 if token_lemma in COMMON_COMPOUND_NOUNS and token.dep_ in ("nsubj", "dobj", "pobj", "attr") and token.idx not in seen:
                     seen.add(token.idx)
-                    issues.append({
-                        "type": "ConsistentTerminology",
-                        "message": f"Use consistent terminology. '{token.text}' may need to be part of a compound technical term.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+                    issues.append(
+                        {
+                            "type": "ConsistentTerminology",
+                            "message": f"Use consistent terminology. '{token.text}' may need to be part of a compound technical term.",
+                            "offset": token.idx,
+                            "length": len(token.text),
+                        }
+                    )
 
     return issues
+
+
 def check_non_approved_words(doc):
     """Detect non-approved words (List of recurring errors).
 
@@ -420,19 +440,23 @@ def check_non_approved_words(doc):
             replacement = NON_APPROVED_WORDS[word]
             if replacement is None:
                 # No direct alternative, use different sentence construction
-                issues.append({
-                    "type": "NonApprovedWords",
-                    "message": f"Word '{word}' is not approved in STE. Use a different sentence construction. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "NonApprovedWords",
+                        "message": f"Word '{word}' is not approved in STE. Use a different sentence construction. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
             elif replacement:
-                issues.append({
-                    "type": "NonApprovedWords",
-                    "message": f"Use '{replacement}' instead of '{word}'. To allow '{word}' with replacement '{replacement}', run: /prosecco-add-to-glossary '{word}' --value '{replacement}'",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+                issues.append(
+                    {
+                        "type": "NonApprovedWords",
+                        "message": f"Use '{replacement}' instead of '{word}'. To allow '{word}' with replacement '{replacement}', run: /prosecco-add-to-glossary '{word}' --value '{replacement}'",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    }
+                )
             seen.add(token.idx)
 
     return issues
