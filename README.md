@@ -2,6 +2,16 @@
 
 Stelint is an ASD-STE100 linter built with spaCy. It checks whether your text conforms to the Simplified Technical English (STE) specification and reports issues in Vale-compatible format.
 
+## Optional: sense2vec model
+
+Stelint can use [sense2vec](https://github.com/explosion/sense2vec) for enhanced word sense disambiguation. This is optional and not required for basic usage.
+
+To install the English sense2vec model:
+
+```bash
+python -m sense2vec install en
+```
+
 <div align="center" style="margin-top:50px;text-align:center;" markdown="1">
 
 [![CI](https://github.com/mikkovihonen/stelint/actions/workflows/ci.yml/badge.svg)](https://github.com/mikkovihonen/stelint/actions/workflows/ci.yml)
