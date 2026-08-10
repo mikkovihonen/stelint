@@ -32,6 +32,7 @@ dev = [
     "twine",
     "ruff",
     "pytest",
+    "pytest-cov",
     "coverage",
     "pre-commit",
 ]
