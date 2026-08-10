@@ -1,0 +1,18 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-uv-lock
+        name: Ensure uv.lock is present and tracked
+        entry: .github/scripts/check_uv_lock.sh
+        language: script
+        pass_filenames: false
+      - id: ruff
+        name: Run ruff
+        entry: uv run ruff check .
+        language: system
+        pass_filenames: false
+      - id: pytest
+        name: Run pytest
+        entry: uv run pytest
+        language: system
+        pass_filenames: false

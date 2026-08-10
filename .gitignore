@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+src/stelint/s2v
+.cache
+
+.pi-container/agent/sessions
+.pi-container/exports

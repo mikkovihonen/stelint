@@ -1,0 +1,14 @@
+[project]
+site_url = "https://mikkovihonen.github.io/stelint/"
+site_name = "Stelint"
+nav = [
+  { "Home" = "README.md" },
+]
+
+[project.theme]
+language = "en"
+features = [
+  "navigation.footer",
+  "navigation.top",
+  "search.highlight",
+]

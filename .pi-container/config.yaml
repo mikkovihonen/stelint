@@ -1,0 +1,151 @@
+# Per-project pi-container configuration (seeded on first run; edit per workspace).
+#
+# This is the single source of truth for orchestration settings. The proxy addon
+# configs (allowlist.yaml, token_replacer.yaml) and chat templates live in their
+# own files/dirs alongside this one.
+#
+# schema_version: Bumped whenever the template changes (new fields, changed types,
+# removed fields, new files in default/). The launch fails if this does not match
+# the pi-container version (the latest git tag). Delete .pi-container to re-seed.
+schema_version: "0.5.1"
+
+# Container resource limits. A null/omitted value means "no limit" (the flag is
+# not passed). Applies to the containers this workspace launches.
+resources:
+  agent:
+    memory: 6g
+    cpus: 8
+  proxy:
+    memory: 2g
+    cpus: 4
+
+# llama-server startup tuning. Large models load slowly; raise startup_timeout
+# (seconds to wait for /health) or startup_attempts (relaunches) if needed.
+llama:
+  startup_timeout: 180
+  startup_attempts: 2
+
+# Network settings for this project's isolated stack.
+network:
+  # Plumb IPv6 through the isolated network + proxy. Only works if the runtime
+  # AND host actually route IPv6.
+  ipv6: false
+  # Upstream resolver the proxy uses for the agent's DNS lookups.
+  dns: "1.1.1.1"
+
+# Proxy container options.
+proxy:
+  # Where the mitmweb UI (auto-assigned port) is published:
+  #   localhost → 127.0.0.1 only (default; not reachable from other hosts)
+  #   lan       → 0.0.0.0 (reachable across the network; UI still password-gated)
+  expose_ui: localhost
+
+# Extra agent-container options (rarely needed).
+agent:
+  # Extra environment variables passed to the agent container.
+  #   env:
+  #     MY_TOKEN: abc123
+  env: {}
+  # Extra bind mounts (use absolute host paths). "host:container[:ro]".
+  #   mounts:
+  #     - /Users/me/.cache/pip:/home/pi/.cache/pip
+  mounts: []
+  # Linux capabilities to add to the agent container. Use the full name
+  # (e.g., "SYS_PTRACE") or short form (e.g., "CAP_SYS_PTRACE"). Common options:
+  #   SYS_PTRACE     - debug processes
+  #   SYS_ADMIN      - mount filesystems, some kernel operations
+  #   DAC_OVERRIDE   - bypass file read/write/execute permission checks
+  #   NET_RAW        - use raw and packet sockets
+  #   MKNOD          - create special files
+  #   SYS_RESOURCE   - override resource limits
+  # See `man 7 capabilities` for the full list.
+  #   capabilities:
+  #     - SYS_PTRACE
+  capabilities: []
+  # Device passthroughs to the agent container. Format: "host:container[:mode]".
+  # Example: "/dev/video0:/dev/video0" or "/dev/bus/usb:/dev/bus/usb:rw"
+  # Useful for GPU access (/dev/nvidia*), USB devices, serial ports, etc.
+  #   devices:
+  #     - /dev/video0:/dev/video0
+  #     - /dev/bus/usb:/dev/bus/usb
+  devices: []
+
+# Nested containers. When enabled, the agent can run its own containers (podman /
+# docker compose / testcontainers) inside the agent container, as rootless podman.
+#
+# Traffic from nested containers still egresses through the proxy and is inspected
+# by mitmproxy — nesting does NOT create a bypass. But enabling this DOES relax the
+# agent container's SELinux confinement (see docs/design/nested-containers.md) and
+# grants /dev/fuse + /dev/net/tun. Off by default.
+#
+# Registry hosts must also be allowed in allowlist.yaml, or image pulls will 403.
+nested_containers:
+  enabled: false
+  # Where nested image layers live:
+  #   volume → persistent per-project named volume (default; survives runs)
+  #   tmpfs  → volatile RAM disk (needs a large podman machine; re-pulls each run)
+  storage: volume
+  # SELinux posture for the agent container:
+  #   disable  → label=disable (default; nested containers need no special flags)
+  #   engine_t → label=type:container_engine_t (agent stays confined, but every
+  #              nested container must be run with --security-opt unmask=all)
+  security: disable
+  # Host ports for user interfaces served by nested containers (a dev server, a
+  # database admin UI, a compose stack's frontend). A nested container's own
+  # `-p 3000:3000` only binds inside the AGENT's network namespace, which the
+  # host cannot reach — the agent container must publish the same port onward.
+  #
+  # Ports must be declared here because a container's published ports are fixed
+  # at start: pi-container cannot add one to a running agent. Each entry is a
+  # port the nested container publishes inside the agent, mapped to the same
+  # host port, or "HOSTPORT:AGENTPORT" to remap. The launch fails fast if a host
+  # port is already taken.
+  #
+  # This is inbound only — it does NOT create egress. The proxy is still the
+  # agent's only route out. But anything that can reach the published port can
+  # talk to whatever the agent serves there, so keep `expose: localhost` unless
+  # you specifically need other hosts to reach it.
+  ports:
+    #   localhost → 127.0.0.1 only (default; not reachable from other hosts)
+    #   lan       → 0.0.0.0 (reachable across the network — NOT authenticated)
+    expose: localhost
+    #   publish:
+    #     - 3000            # host 3000 → agent 3000
+    #     - 5173
+    #     - "18080:8080"    # host 18080 → agent 8080
+    publish: []
+
+# Transient tmpfs mounts inside the agent container. Each path (under /workspace)
+# is a volatile RAM disk — data is lost when the container stops. Use it for build
+# artifacts / caches you don't want written back to the host workspace.
+#   Example:
+#     tmpfs:
+#       paths:
+#         - /workspace/node_modules/.cache
+#         - /workspace/target
+tmpfs:
+  paths:
+    - /workspace/.venv
+    - /workspace/.cache
+    - /workspace/.pytest_cache
+
+
+# mitmweb flow export. When enabled, the proxy's captured HTTP/HTTPS flow history
+# is exported (bucketed by UTC date) under .pi-container/exports/ after the agent
+# shuts down. The export contains full request/response bodies — treat exports/ as
+# sensitive and keep it out of version control. Default: disabled.
+flow_export:
+  enabled: false
+
+# Proxy egress policy. Only HTTP/HTTPS/DNS are intercepted by mitmproxy; every
+# other protocol is denied by default. Opt a protocol in to let the agent use it —
+# but note these are forwarded UNINSPECTED (plain NAT); mitmproxy and the allowlist
+# do not see them.
+egress:
+  allow:
+    ssh: false            # TCP 22 (e.g. git over SSH)
+    smtp: false           # TCP 25, 465, 587
+    git: false            # TCP 9418 (git:// protocol)
+    ntp: false            # UDP 123 (time sync)
+    tcp_ports: []         # arbitrary extra TCP ports, e.g. [2222, 8443]
+    udp_ports: []         # arbitrary extra UDP ports, e.g. [51820]

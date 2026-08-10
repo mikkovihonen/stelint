@@ -1,0 +1,41 @@
+[project]
+name = "stelint"
+version = "0.1.0"
+description = "A Python package for stelint."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+authors = [{ name = "Stelint" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "spacy",
+    "numpy",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv]
+default-groups = ["dev"]
+
+[dependency-groups]
+dev = [
+    "zensical",
+    "build",
+    "twine",
+    "ruff",
+    "pytest",
+    "coverage",
+    "pre-commit",
+]
+
+[tool.setuptools]
+packages = ["stelint"]
+
+[tool.setuptools.package-dir]
+"" = "src"

@@ -1,0 +1,5 @@
+glossaries:
+  - path: ./company_glossary.jsonl
+    cardinality: 100
+  - path: ./project_glossary.jsonl
+    cardinality: 200
