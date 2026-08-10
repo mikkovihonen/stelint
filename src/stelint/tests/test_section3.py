@@ -1,6 +1,7 @@
 """Tests for Section 3 (Verbs) checks."""
 import pytest
 import spacy
+
 from stelint.checks_section3 import (
     check_ing_forms,
     check_noun_as_verb,

@@ -1,6 +1,7 @@
 """Tests for Section 5 (Procedural writing) checks."""
 import pytest
 import spacy
+
 from stelint.checks_section5 import (
     check_descriptive_statement_first,
     check_multiple_instructions,

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate a coverage.svg badge from the .coverage file."""
 
 import argparse

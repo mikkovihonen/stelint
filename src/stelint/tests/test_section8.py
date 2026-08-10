@@ -1,6 +1,7 @@
 """Tests for Section 8 (Punctuation and word count) checks."""
 import pytest
 import spacy
+
 from stelint.checks_section8 import (
     check_hyphenation_patterns,
     check_hyphens,

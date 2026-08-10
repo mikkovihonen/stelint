@@ -1,6 +1,7 @@
 """Tests for Section 4 (Sentences) checks."""
 import pytest
 import spacy
+
 from stelint.checks_section4 import (
     check_article_usage,
     check_connecting_words,

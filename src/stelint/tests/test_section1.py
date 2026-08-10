@@ -1,6 +1,7 @@
 """Tests for Section 1 (Words) checks."""
 import pytest
 import spacy
+
 from stelint.checks_section1 import (
     check_approved_forms,
     check_approved_meaning,

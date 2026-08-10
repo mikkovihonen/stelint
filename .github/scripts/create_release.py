@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Create a GitHub release, skipping if it already exists."""
 
 import json

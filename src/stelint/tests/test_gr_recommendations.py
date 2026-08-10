@@ -1,6 +1,7 @@
 """Tests for General Recommendations (GR-1 to GR-8) checks."""
 import pytest
 import spacy
+
 from stelint.checks_gr_recommendations import (
     check_ambiguous_pronouns,
     check_ambiguous_this,

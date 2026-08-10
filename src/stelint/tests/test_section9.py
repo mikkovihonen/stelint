@@ -1,6 +1,7 @@
 """Tests for Section 9 (Writing practices) checks."""
 import pytest
 import spacy
+
 from stelint.checks_section9 import (
     check_consistent_style,
     check_consistent_terminology,

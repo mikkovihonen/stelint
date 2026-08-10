@@ -1,6 +1,7 @@
 """Tests for Section 6 (Descriptive writing) checks."""
 import pytest
 import spacy
+
 from stelint.checks_section6 import (
     check_information_structure,
     check_key_words,

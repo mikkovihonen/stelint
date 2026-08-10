@@ -81,7 +81,7 @@ class TestPolysemyDetection:
 
     def test_wordnet_high_polysemy(self):
         """Test that high-synset words with different contexts are flagged."""
-        from checks_section6 import _get_wordnet_synset_count
+        from stelint.checks_section6 import _get_wordnet_synset_count
         # 'run' has 57 synsets (very polysemous)
         assert _get_wordnet_synset_count('run') > 20
         # 'container' has 1 synset (not polysemous)

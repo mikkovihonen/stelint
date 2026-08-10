@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Extract release notes for a given version from CHANGELOG.md."""
 
 import re
