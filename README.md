@@ -2,6 +2,8 @@
 
 Stelint is an ASD-STE100 linter built with spaCy. It checks whether your text conforms to the Simplified Technical English (STE) specification and reports issues in Vale-compatible format.
 
+> **Note:** This project is in **alpha** stage. APIs and behavior may change without notice.
+
 <div align="center" style="margin-top:50px;text-align:center;" markdown="1">
 
 [![CI](https://github.com/mikkovihonen/stelint/actions/workflows/ci.yml/badge.svg)](https://github.com/mikkovihonen/stelint/actions/workflows/ci.yml)
