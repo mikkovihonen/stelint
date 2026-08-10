@@ -6,12 +6,17 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +25,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Cache uv
         uses: actions/cache@v4
@@ -51,17 +56,20 @@ jobs:
           fi
           echo "Build output verified: $(find site -type f | wc -l) files found."
 
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
       - name: Deploy to GitHub Pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch --orphan gh-pages
-          git rm -rf . 2>/dev/null || true
-          cp -R site/* .
-          cp -R site/.* . 2>/dev/null || true
-          touch .nojekyll
-          git add .
-          git commit -m "Publish Zensical site"
-          git push --force origin gh-pages
+        id: deployment
+        uses: actions/deploy-pages@v4

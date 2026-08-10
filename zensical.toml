@@ -1,8 +1,13 @@
 [project]
 site_url = "https://mikkovihonen.github.io/stelint/"
 site_name = "Stelint"
+# `docs/index.md` is a symlink to the repo-root README.md, so the project
+# homepage and the site homepage stay in sync from a single source.
 nav = [
-  { "Home" = "README.md" },
+  { "Home" = "index.md" },
+  { "Runbook" = "runbook.md" },
+  { "Development" = "development.md" },
+  { "Glossary file specification" = "glossary_file_specification.md" },
 ]
 
 [project.theme]

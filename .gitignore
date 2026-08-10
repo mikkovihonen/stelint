@@ -7,6 +7,7 @@ src/stelint/s2v
 .pytest_cache
 .coverage
 coverage.xml
+site/
 
 .pi-container/agent/sessions
 .pi-container/exports
