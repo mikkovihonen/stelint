@@ -249,7 +249,10 @@ def check_notes(doc):
 
                 if after_note:
                     # Parse the text after NOTE:
-                    note_doc = nlp(after_note)
+                    nlp_model = _get_nlp()
+                    if nlp_model is None:
+                        continue
+                    note_doc = nlp_model(after_note)
 
                     # Check if the note contains an imperative verb
                     for token in note_doc:
@@ -271,8 +274,11 @@ def check_notes(doc):
     return issues
 
 
-# Import nlp from main module (already loaded there)
-# This avoids duplicate model loading
-import spacy as spacy_module
+def _get_nlp():
+    """Load spaCy model lazily to avoid import errors when model is not installed."""
+    try:
+        import spacy as spacy_module
 
-nlp = spacy_module.load("en_core_web_sm")
+        return spacy_module.load("en_core_web_sm")
+    except OSError:
+        return None

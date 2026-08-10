@@ -10,7 +10,21 @@ import sys
 import spacy
 
 # Load spaCy model
-nlp = spacy.load("en_core_web_sm")
+try:
+    nlp = spacy.load("en_core_web_sm")
+except (ImportError, OSError, RuntimeError):
+    nlp = None
+
+
+def _get_nlp():
+    """Load spaCy model lazily to avoid import errors when model is not installed."""
+    try:
+        import spacy as spacy_module
+
+        return spacy_module.load("en_core_web_sm")
+    except OSError:
+        return nlp
+
 
 # Import check functions from Section 1 (Words)
 # Import check functions from General Recommendations

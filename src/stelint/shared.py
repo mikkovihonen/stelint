@@ -15,6 +15,16 @@ except (ImportError, OSError, RuntimeError):
     nlp = None
 
 
+def _get_nlp():
+    """Load spaCy model lazily to avoid import errors when model is not installed."""
+    try:
+        import spacy as spacy_module
+
+        return spacy_module.load("en_core_web_sm")
+    except OSError:
+        return nlp
+
+
 def _is_technical_context(token, doc):
     """Check if a token is in a technical context.
 
