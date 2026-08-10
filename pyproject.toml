@@ -15,6 +15,7 @@ dependencies = [
     "spacy",
     "numpy",
     "beautifulsoup4",
+    "nltk",
 ]
 
 [build-system]
