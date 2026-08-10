@@ -20,7 +20,9 @@ def _get_nlp():
         nlp = spacy_module.load("en_core_web_sm")
         print(f"Model loaded in {time.time() - start:.1f}s")
         return nlp
-    except OSError:
+    except OSError as e:
+        print(f"Error: Could not load spaCy model 'en_core_web_sm'. {e}", file=sys.stderr)
+        print("Install it with: python -m spacy download en_core_web_sm", file=sys.stderr)
         return None
 
 
@@ -186,7 +188,11 @@ def main():
 
     cleaned_text, offset_map, regions = preprocess_markdown(text)
 
-    doc = _get_nlp()(cleaned_text)
+    nlp = _get_nlp()
+    if nlp is None:
+        sys.exit(1)
+
+    doc = nlp(cleaned_text)
 
     # Helper to look up the region type for a cleaned-text position.
     # Returns the region type string (e.g. "header", "table_row") or None.
