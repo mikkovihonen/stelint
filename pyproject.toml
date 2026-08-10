@@ -4,11 +4,11 @@ version = "0.1.0"
 description = "A Python package for stelint."
 readme = "README.md"
 requires-python = ">=3.13"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Stelint" }]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -24,6 +24,11 @@ build-backend = "uv_build"
 
 [tool.uv]
 default-groups = ["dev"]
+
+[tool.uv.build-backend]
+# Tests are run from a source checkout, so keep them out of the distributions.
+source-exclude = ["**/tests/**", "**/.DS_Store"]
+wheel-exclude = ["**/tests/**", "**/.DS_Store"]
 
 [dependency-groups]
 dev = [
@@ -47,9 +52,3 @@ line-length = 200
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
 ignore = ["E402", "E501"]
-
-[tool.setuptools]
-packages = ["stelint"]
-
-[tool.setuptools.package-dir]
-"" = "src"

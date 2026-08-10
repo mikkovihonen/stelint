@@ -6,12 +6,14 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions: {}
+
 concurrency:
   group: publish-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +22,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Cache uv
         uses: actions/cache@v4
@@ -40,12 +42,92 @@ jobs:
       - name: Sync project environment
         run: uv sync
 
+      - name: Verify tag matches project version
+        run: |
+          case "$GITHUB_REF" in
+            refs/tags/*) ;;
+            *)
+              echo "Error: this workflow must run against a tag ref, but got '$GITHUB_REF'." >&2
+              echo "Re-run it from the Actions tab with a tag selected as the ref." >&2
+              exit 1
+              ;;
+          esac
+          tag=${GITHUB_REF#refs/tags/}
+          tag_version=${tag#v}
+          project_version=$(uv run python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+          if [ "$tag_version" != "$project_version" ]; then
+            echo "Error: tag '$tag' implies version '$tag_version', but pyproject.toml declares '$project_version'." >&2
+            echo "Bump the version in pyproject.toml (and CHANGELOG.md) before tagging." >&2
+            exit 1
+          fi
+          echo "Tag and project version agree: $project_version"
+
+      - name: Build distribution
+        run: uv run python -m build
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then
+            echo "Error: 'dist/' directory is missing or empty after build." >&2
+            exit 1
+          fi
+          uv run python -m twine check dist/*
+          echo "Build artifacts:"
+          ls -lh dist/
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # Publishes via PyPI Trusted Publishing (OIDC): the `id-token: write`
+  # permission lets the runner mint a short-lived token, so no API token
+  # secret is stored in the repository.
+  pypi-publish:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/stelint
+
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  # Runs only after PyPI accepts the upload, so a failed publish cannot leave
+  # behind a GitHub release pointing at a version that was never released.
+  github-release:
+    needs: pypi-publish
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
       - name: Extract release notes from CHANGELOG
         id: release_notes
         run: |
           tag=${GITHUB_REF#refs/tags/}
           version=${tag#v}
-          notes=$(uv run python .github/scripts/extract_release_notes.py "$version")
+          notes=$(python .github/scripts/extract_release_notes.py "$version")
           {
             echo 'release_notes<<'"'"'ENDOFGITHUBOUTPUT'"'"'
             echo "$notes"
@@ -58,28 +140,4 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_NAME: Release ${{ github.ref_name }}
           RELEASE_NOTES: ${{ steps.release_notes.outputs.release_notes }}
-        run: uv run python .github/scripts/create_release.py
-
-      - name: Build distribution
-        run: uv run python -m build
-
-      - name: Verify build artifacts
-        run: |
-          if [ ! -d "dist" ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then
-            echo "Error: 'dist/' directory is missing or empty after build." >&2
-            exit 1
-          fi
-          echo "Build artifacts:"
-          ls -lh dist/
-
-      - name: Upload distribution artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Publish to PyPI
-        run: uv run python -m twine upload --repository pypi --skip-existing dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: python .github/scripts/create_release.py

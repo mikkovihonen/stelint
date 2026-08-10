@@ -26,8 +26,10 @@ def github_api_request(
                 return response.status, body
         except HTTPError as exc:
             body = exc.read().decode("utf-8")
-            if exc.code == 422:
-                # 422 means resource already exists — not retryable
+            if exc.code in (404, 422):
+                # 404 means the resource is absent and 422 that it already
+                # exists. Both are answers, not failures — let the caller
+                # decide, and do not retry.
                 return exc.code, body
             if exc.code in (429, 500, 502, 503, 504):
                 if attempt < MAX_RETRIES:

@@ -8,6 +8,7 @@ src/stelint/s2v
 .coverage
 coverage.xml
 site/
+dist
 
 .pi-container/agent/sessions
 .pi-container/exports
