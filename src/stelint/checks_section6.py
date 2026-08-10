@@ -136,6 +136,10 @@ def _get_wordnet_synset_count(lemma):
         int - number of synsets
     """
     try:
+        import nltk
+        nltk.download("wordnet", quiet=True)
+        nltk.download("punkt", quiet=True)
+        nltk.download("punkt_tab", quiet=True)
         from nltk.corpus import wordnet as wn
         return len(wn.synsets(lemma))
     except (ImportError, OSError):
