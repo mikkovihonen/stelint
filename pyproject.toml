@@ -1,6 +1,6 @@
 [project]
 name = "stelint"
-version = "0.1.3"
+version = "0.1.4"
 description = "Stelint is an ASD-STE100 linter built with spaCy. It checks whether your text conforms to the Simplified Technical English (STE) specification and reports issues in Vale-compatible format."
 readme = "README.md"
 requires-python = ">=3.13"

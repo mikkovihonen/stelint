@@ -45,7 +45,7 @@ uv run python -m stelint path/to/file.md
 Lint from stdin:
 
 ```bash
-cat path/to/file.md | uv run python -m stelint
+cat path/to/file.md | uv run python -m stelint -
 ```
 
 ## Usage
@@ -56,7 +56,7 @@ uv run python -m stelint [OPTIONS] [FILE]
 
 | Argument | Description |
 |---|---|
-| `FILE` | Path to a `.md` file to lint. If omitted, stelint reads from stdin. |
+| `FILE` | Path to a `.md` file to lint. Use `-` to read from stdin. |
 | `--include-all` | Show all warnings, including those inside metadata regions such as headers, bold labels, tables, and code blocks. Without this flag, warnings inside metadata regions are suppressed. |
 
 ## How it works

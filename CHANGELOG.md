@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-08-10
+
+### Breaking changes
+
+- Stdin reading now requires explicit `-` argument. Running `stelint` without arguments shows usage instead of hanging.
+
+### What's new
+
+- `--help` flag shows usage information
+
 ## [0.1.3] - 2026-08-10
 
 - Add sense2vec dependency and make model loading optional

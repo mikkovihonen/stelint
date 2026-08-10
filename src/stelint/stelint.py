@@ -174,7 +174,33 @@ def main():
 
     # Read input from file or stdin
     filepath = None
-    if len(sys.argv) > 1:
+    if len(sys.argv) < 2:
+        print("Usage: stelint [OPTIONS] [FILE]")
+        print()
+        print("Lint a Markdown file for ASD-STE100 compliance.")
+        print("Use '-' for FILE to read from stdin.")
+        print()
+        print("Options:")
+        print("  --include-all  Show all warnings, including those inside metadata regions")
+        print("  --glossaries   Path to glossaries.yaml config file")
+        sys.exit(0)
+
+    if sys.argv[1] in ("--help", "-h"):
+        print("Usage: stelint [OPTIONS] [FILE]")
+        print()
+        print("Lint a Markdown file for ASD-STE100 compliance.")
+        print("Use '-' for FILE to read from stdin.")
+        print()
+        print("Options:")
+        print("  --include-all  Show all warnings, including those inside metadata regions")
+        print("  --glossaries   Path to glossaries.yaml config file")
+        sys.exit(0)
+
+    if sys.argv[1] == "-":
+        # Explicit stdin reading via `-` argument
+        text = sys.stdin.read()
+        filepath = "stdin"
+    else:
         filepath = sys.argv[1]
         try:
             with open(filepath, "r", encoding="utf-8") as f:
@@ -182,9 +208,6 @@ def main():
         except FileNotFoundError:
             print(f"Error: File '{filepath}' not found.", file=sys.stderr)
             sys.exit(1)
-    else:
-        text = sys.stdin.read()
-        filepath = "stdin"
 
     if not text.strip():
         print("No problems found.")
