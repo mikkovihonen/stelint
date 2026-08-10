@@ -1,7 +1,15 @@
 name: Publish GitHub Pages
 
 on:
-  push:
+  # Deliberately not triggered by `push`. Publishing runs only after CI passes
+  # on main, which gates the docs on a green build and picks up the coverage
+  # badge CI commits — that commit is pushed with GITHUB_TOKEN, so it does not
+  # trigger workflows on its own.
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
     branches:
       - main
   workflow_dispatch:
@@ -18,6 +26,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # Never publish docs off a failed CI run. On workflow_run the checkout
+    # defaults to the head of the default branch, which is what we want here:
+    # it includes the badge commit CI just made, whereas the SHA that triggered
+    # CI predates it.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
 
     steps:
       - uses: actions/checkout@v4
