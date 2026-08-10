@@ -15,10 +15,10 @@ def _get_nlp():
 
         import spacy as spacy_module
 
-        print("Loading spaCy model (first run may be slow)...", file=sys.stderr)
+        print("Loading spaCy model (first run may be slow)...")
         start = time.time()
         nlp = spacy_module.load("en_core_web_sm")
-        print(f"Model loaded in {time.time() - start:.1f}s", file=sys.stderr)
+        print(f"Model loaded in {time.time() - start:.1f}s")
         return nlp
     except OSError:
         return None
