@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import time
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -74,7 +75,16 @@ def main() -> None:
     repo = os.environ.get("GITHUB_REPOSITORY")
     tag = os.environ.get("RELEASE_TAG")
     name = os.environ.get("RELEASE_NAME")
-    body = os.environ.get("RELEASE_NOTES", "")
+    # RELEASE_NOTES_FILE is preferred: release notes are multi-line Markdown,
+    # which does not survive a plain environment variable reliably.
+    notes_file = os.environ.get("RELEASE_NOTES_FILE")
+    if notes_file:
+        path = Path(notes_file)
+        if not path.is_file():
+            raise SystemExit(f"Release notes file not found: {notes_file!r}")
+        body = path.read_text(encoding="utf-8").strip()
+    else:
+        body = os.environ.get("RELEASE_NOTES", "")
 
     if not token:
         raise SystemExit("Missing GITHUB_TOKEN environment variable")

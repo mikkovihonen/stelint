@@ -122,22 +122,20 @@ jobs:
         with:
           python-version: '3.13'
 
+      # Written to a file rather than a step output: release notes are
+      # arbitrary multi-line Markdown, and the GITHUB_OUTPUT heredoc form
+      # breaks on any line that collides with the delimiter.
       - name: Extract release notes from CHANGELOG
-        id: release_notes
         run: |
-          tag=${GITHUB_REF#refs/tags/}
-          version=${tag#v}
-          notes=$(python .github/scripts/extract_release_notes.py "$version")
-          {
-            echo 'release_notes<<'"'"'ENDOFGITHUBOUTPUT'"'"'
-            echo "$notes"
-            echo 'ENDOFGITHUBOUTPUT'
-          } >> "$GITHUB_OUTPUT"
+          tag="${GITHUB_REF#refs/tags/}"
+          python .github/scripts/extract_release_notes.py "${tag#v}" > release_notes.md
+          echo "Release notes:"
+          cat release_notes.md
 
       - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_NAME: Release ${{ github.ref_name }}
-          RELEASE_NOTES: ${{ steps.release_notes.outputs.release_notes }}
+          RELEASE_NOTES_FILE: release_notes.md
         run: python .github/scripts/create_release.py
