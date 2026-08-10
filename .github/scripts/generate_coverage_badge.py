@@ -31,7 +31,7 @@ RIGHT_TEXT_LENGTH = 280
 BLUR_STD_DEVIATION = 0.8
 
 
-def generate_badge(coverage_pct: float, precision: int = 1) -> str:
+def generate_badge(coverage_pct: float, precision: int = 0) -> str:
     """Generate a Shields.io-style coverage badge SVG.
 
     Args:

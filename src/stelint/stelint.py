@@ -7,23 +7,15 @@ This is the main entry point that imports all check functions from section-speci
 
 import sys
 
-import spacy
-
-# Load spaCy model
-try:
-    nlp = spacy.load("en_core_web_sm")
-except (ImportError, OSError, RuntimeError):
-    nlp = None
-
 
 def _get_nlp():
-    """Load spaCy model lazily to avoid import errors when model is not installed."""
+    """Load spaCy model lazily to avoid slow imports."""
     try:
         import spacy as spacy_module
 
         return spacy_module.load("en_core_web_sm")
     except OSError:
-        return nlp
+        return None
 
 
 # Import check functions from Section 1 (Words)
@@ -188,7 +180,7 @@ def main():
 
     cleaned_text, offset_map, regions = preprocess_markdown(text)
 
-    doc = nlp(cleaned_text)
+    doc = _get_nlp()(cleaned_text)
 
     # Helper to look up the region type for a cleaned-text position.
     # Returns the region type string (e.g. "header", "table_row") or None.
