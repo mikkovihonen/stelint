@@ -1,14 +1,14 @@
-#!/usr/bin/env python3
 """Tests for Section 5 (Procedural writing) checks."""
 import pytest
 import spacy
-from checks_section5 import (
-    check_sentence_length_procedural,
+from stelint.checks_section5 import (
+    check_descriptive_statement_first,
     check_multiple_instructions,
     check_non_imperative_in_procedures,
-    check_descriptive_statement_first,
     check_notes,
+    check_sentence_length_procedural,
 )
+
 
 @pytest.fixture
 def nlp_model():

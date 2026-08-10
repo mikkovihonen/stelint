@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Text preprocessing for prose linting.
 
@@ -28,7 +27,7 @@ def _decode_entity(match: re.Match) -> str:
     the output preserves the input byte-for-byte.
     """
     text = match.group(0)
-    if text.startswith("&#x") or text.startswith("&#X"):
+    if text.startswith(("&#x", "&#X")):
         try:
             return chr(int(text[3:-1], 16))
         except (ValueError, OverflowError):
@@ -142,7 +141,7 @@ def preprocess_html(
             "beautifulsoup4 is required for HTML preprocessing. "
             "Install it with: pip install beautifulsoup4"
         )
-    except Exception:
+    except (SyntaxError, ValueError):
         pass  # Invalid HTML; proceed with regex-based processing.
 
     # Find all non-text spans.
@@ -231,7 +230,7 @@ def _get_markdown_blocks(md: str) -> list[tuple[int, int, str]]:
         )
 
     md_it = MarkdownIt()
-    tokens = md_it.parse(md)
+    md_it.parse(md)
 
     blocks: list[tuple[int, int, str]] = []
 
@@ -270,7 +269,7 @@ def _get_markdown_blocks(md: str) -> list[tuple[int, int, str]]:
             # Replace only the URL part with spaces, keep link text visible.
             # The entire link is marked as "link" region.
             text_part = full_match[:url_start_in_match]
-            url_part = full_match[url_start_in_match:]
+            full_match[url_start_in_match:]
             # Add the text part as visible (not replaced)
             # Add the URL part as replaced with spaces
             blocks.append((m.start(), m.start() + len(text_part), "link_text"))

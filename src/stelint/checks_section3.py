@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 Section 3 Checks (Verbs)
 
@@ -27,13 +26,13 @@ Rule 3.7: Use an approved verb to describe an action, not a noun or other
           parts of speech.
 """
 import re
-import spacy
+
 from .glossary import (
-    BE_VERBS,
     APPROVED_ING_WORDS,
-    PASSIVE_EXCEPTIONS,
     APPROVED_VERB_TAGS,
+    BE_VERBS,
     NOUN_AS_VERB_PATTERNS,
+    PASSIVE_EXCEPTIONS,
 )
 
 
@@ -65,15 +64,14 @@ def check_verb_forms(doc):
                 continue
 
             # Check if tag is approved
-            if tag not in APPROVED_VERB_TAGS:
-                if token.idx not in seen:
-                    seen.add(token.idx)
-                    issues.append({
-                        "type": "VerbForms",
-                        "message": f"Do not use '{token.text}' ({tag}). Use an approved verb form instead.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+            if tag not in APPROVED_VERB_TAGS and token.idx not in seen:
+                seen.add(token.idx)
+                issues.append({
+                    "type": "VerbForms",
+                    "message": f"Do not use '{token.text}' ({tag}). Use an approved verb form instead.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                })
 
     return issues
 
@@ -158,19 +156,13 @@ def check_verb_tenses(doc):
         # Look for auxiliary verbs followed by main verbs with complex tenses
         elif token.pos_ == "AUX" and token.dep_ != "auxpass":
             head = token.head
-            if head.pos_ == "VERB" and head.dep_ == "ROOT":
-                # Check for modal + base form (this is approved for "will", "can", "may")
-                if token.tag_ == "MD":
-                    # Skip approved modals (will, can, may)
-                    if token.text.lower() in ("will", "can", "may"):
-                        continue
-                    # Flag other modals (should, could, might, etc.)
-                    issues.append({
-                        "type": "VerbTenses",
-                        "message": f"Do not use '{token.text}'. Use simple present or simple past tense instead.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+            if head.pos_ == "VERB" and head.dep_ == "ROOT" and token.tag_ == "MD" and token.text.lower() not in ("will", "can", "may"):
+                issues.append({
+                    "type": "VerbTenses",
+                    "message": f"Do not use '{token.text}'. Use simple present or simple past tense instead.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                })
 
     return issues
 
@@ -218,15 +210,14 @@ def check_past_participle_as_adjective(doc):
             # If past participle is not used as adjective and not as noun, it might be an error
             # This is a simplified check - in practice, past participles can be used in various ways
             # The main purpose is to ensure they're not used as complex verb constructions
-            if not is_in_noun_chunk and not is_attributive and not is_used_as_noun:
-                if token.idx not in seen:
-                    seen.add(token.idx)
-                    issues.append({
-                        "type": "PastParticipleAsAdjective",
-                        "message": f"Do not use '{token.text}' as a verb. Use it as an adjective or in a simple verb form.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+            if not is_in_noun_chunk and not is_attributive and not is_used_as_noun and token.idx not in seen:
+                seen.add(token.idx)
+                issues.append({
+                    "type": "PastParticipleAsAdjective",
+                    "message": f"Do not use '{token.text}' as a verb. Use it as an adjective or in a simple verb form.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                })
 
     return issues
 
@@ -315,10 +306,8 @@ def check_passive_voice_with_agent(doc):
 
     for token in doc:
         # Check for passive voice with "by" agent
-        if token.text.lower() == "by" and token.pos_ == "ADP":
-            # Check if this is part of a passive construction
-            if token.dep_ == "agent":
-                # Find the main verb
+        if token.text.lower() == "by" and token.pos_ == "ADP" and token.dep_ == "agent":
+            # Find the main verb
                 for child in token.head.children:
                     if child.pos_ == "VERB" and child.dep_ == "ROOT":
                         # Check if there's an auxpass

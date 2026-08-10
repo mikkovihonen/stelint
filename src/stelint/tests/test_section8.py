@@ -1,17 +1,17 @@
-#!/usr/bin/env python3
 """Tests for Section 8 (Punctuation and word count) checks."""
 import pytest
 import spacy
-from checks_section8 import (
-    check_semicolons,
+from stelint.checks_section8 import (
+    check_hyphenation_patterns,
     check_hyphens,
     check_parentheses_usage,
-    check_word_count_with_parentheses,
-    check_word_count_with_numbers,
-    check_hyphenation_patterns,
+    check_semicolons,
     check_vertical_list_colons,
     check_word_count_all,
+    check_word_count_with_numbers,
+    check_word_count_with_parentheses,
 )
+
 
 @pytest.fixture
 def nlp_model():

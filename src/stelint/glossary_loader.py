@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 Constants Loader with Namespace and Cardinality Support.
 
@@ -20,8 +19,7 @@ Example usage:
 """
 import json
 import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class ConstantsLoader:
@@ -38,7 +36,7 @@ class ConstantsLoader:
          "type": "mapping", "data": {"unwanted_word": "__REMOVE__"}}
     """
     
-    def __init__(self, base_path: Optional[str] = None):
+    def __init__(self, base_path: str | None = None):
         """
         Initialize the loader.
         
@@ -46,11 +44,11 @@ class ConstantsLoader:
             base_path: Optional base path for JSONL files (defaults to current directory)
         """
         self.base_path = base_path or os.getcwd()
-        self.configs: Dict[str, Dict[str, Any]] = {}
-        self.metadata: Dict[str, Dict[str, Any]] = {}
-        self._current_filter: Optional[List[str]] = None
+        self.configs: dict[str, dict[str, Any]] = {}
+        self.metadata: dict[str, dict[str, Any]] = {}
+        self._current_filter: list[str] | None = None
     
-    def load(self, path: str, namespace_filter: Optional[List[str]] = None):
+    def load(self, path: str, namespace_filter: list[str] | None = None):
         """
         Load constants from a JSONL file.
         
@@ -75,7 +73,7 @@ class ConstantsLoader:
         
         self._current_filter = None
     
-    def _process_entry(self, obj: Dict[str, Any], line_num: int):
+    def _process_entry(self, obj: dict[str, Any], line_num: int):
         """Process a single JSONL entry."""
         namespace = obj.get('namespace', 'general')
         name = obj.get('name')
@@ -111,7 +109,7 @@ class ConstantsLoader:
         """
         return self.configs.get(namespace, {}).get(name)
     
-    def get_all(self, namespace: str) -> Dict[str, Any]:
+    def get_all(self, namespace: str) -> dict[str, Any]:
         """
         Get all constants in a namespace.
         
@@ -123,7 +121,7 @@ class ConstantsLoader:
         """
         return self.configs.get(namespace, {}).copy()
     
-    def get_rules(self, namespace: str, name: str) -> List[str]:
+    def get_rules(self, namespace: str, name: str) -> list[str]:
         """
         Get the STE100 rule references for a constant.
         
@@ -149,7 +147,7 @@ class ConstantsLoader:
         """
         return self.metadata.get(namespace, {}).get(name, {}).get('type', 'unknown')
     
-    def get_namespaces(self) -> List[str]:
+    def get_namespaces(self) -> list[str]:
         """
         Get all loaded namespaces.
         
@@ -158,7 +156,7 @@ class ConstantsLoader:
         """
         return sorted(self.configs.keys())
     
-    def get_constants_in_namespace(self, namespace: str) -> List[str]:
+    def get_constants_in_namespace(self, namespace: str) -> list[str]:
         """
         Get all constant names in a namespace.
         
@@ -221,7 +219,7 @@ class ConstantsLoader:
         """
         # Save current state
         saved_configs = self.configs.copy()
-        saved_metadata = self.metadata.copy()
+        self.metadata.copy()
         
         # Clear and reload
         self.configs = {}
@@ -254,7 +252,7 @@ class ConstantsLoader:
 
 
 # Global loader instance for convenience
-_default_loader: Optional[ConstantsLoader] = None
+_default_loader: ConstantsLoader | None = None
 
 
 def get_default_loader() -> ConstantsLoader:
@@ -270,7 +268,7 @@ def get_default_loader() -> ConstantsLoader:
     return _default_loader
 
 
-def load_constants(path: str, namespace_filter: Optional[List[str]] = None) -> ConstantsLoader:
+def load_constants(path: str, namespace_filter: list[str] | None = None) -> ConstantsLoader:
     """
     Convenience function to load constants from a file.
     

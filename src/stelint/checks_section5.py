@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 Section 5 Checks (Procedural writing)
 
@@ -17,8 +16,6 @@ Rule 5.4: When there is a condition that the reader must know about first, start
 Notes
 Rule 5.5: Write notes only to give information, not instructions.
 """
-import re
-import spacy
 from .glossary import CONDITIONAL_WORDS, IMPERATIVE_VERB_LEMMAS
 
 
@@ -82,14 +79,10 @@ def check_multiple_instructions(doc):
 
         for token in sent:
             # Check if token is a verb in imperative form
-            if token.pos_ == "VERB" and token.tag_ == "VB":
-                # Check if it's a root verb, conj, or has imperative-like dependencies
+            if token.pos_ == "VERB" and token.tag_ == "VB" and token.dep_ in ("ROOT", "conj", "advcl", "cc") and token.dep_ not in ("ccomp", "xcomp"):
                 #conj verbs (like "install" in "Remove ... and install ...") are also imperatives
-                if token.dep_ in ("ROOT", "conj", "advcl", "cc"):
-                    # Verify it's not a subordinate clause verb (ccomp, xcomp)
-                    if token.dep_ not in ("ccomp", "xcomp"):
-                        imperative_count += 1
-                        imperative_tokens.append(token)
+                imperative_count += 1
+                imperative_tokens.append(token)
 
         # If there are multiple imperative verbs, flag it
         if imperative_count > 1 and sent.start_char not in seen:
@@ -146,24 +139,21 @@ def check_non_imperative_in_procedures(doc):
                     seen.add(first_content_token.idx)
                     issues.append({
                         "type": "NonImperativeInProcedures",
-                        "message": f"Use imperative form. Start with a verb in base form (e.g., 'remove', 'install', 'check').",
+                        "message": "Use imperative form. Start with a verb in base form (e.g., 'remove', 'install', 'check').",
                         "offset": first_content_token.idx,
                         "length": len(first_content_token.text),
                     })
 
         # Check for modal verbs (must, should, can, will) followed by base form
         for token in sent:
-            if token.pos_ == "AUX" and token.tag_ == "MD":
-                # Check if it's a forbidden modal
-                if token.text.lower() in ("must", "should", "can", "will"):
-                    if token.idx not in seen:
-                        seen.add(token.idx)
-                        issues.append({
-                            "type": "NonImperativeInProcedures",
-                            "message": f"Use imperative form instead of '{token.text}'. Use base form of the verb.",
-                            "offset": token.idx,
-                            "length": len(token.text),
-                        })
+            if token.pos_ == "AUX" and token.tag_ == "MD" and token.text.lower() in ("must", "should", "can", "will") and token.idx not in seen:
+                seen.add(token.idx)
+                issues.append({
+                    "type": "NonImperativeInProcedures",
+                    "message": f"Use imperative form instead of '{token.text}'. Use base form of the verb.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                })
 
     return issues
 
@@ -195,30 +185,24 @@ def check_descriptive_statement_first(doc):
         conditional_token = None
 
         for token in sent:
-            if token.text.lower() in CONDITIONAL_WORDS:
-                # Check if it's a subordinating conjunction (SCONJ), auxiliary (aux),
-                # or adverbial modifier (advmod) used as conditional
-                if token.pos_ == "SCONJ" or token.dep_ in ("mark", "aux", "advmod"):
-                    has_conditional = True
-                    conditional_token = token
-                    break
+            if token.text.lower() in CONDITIONAL_WORDS and (token.pos_ == "SCONJ" or token.dep_ in ("mark", "aux", "advmod")):
+                has_conditional = True
+                conditional_token = token
+                break
 
         if has_conditional:
             # Check if the conditional clause is at the beginning of the sentence
             # Find the first content word (non-punctuation)
             first_token = next((t for t in sent if t.pos_ != "PUNCT"), None)
 
-            if first_token and conditional_token:
-                # Check if the conditional word is not the first word
-                if conditional_token.i > first_token.i:
-                    if conditional_token.idx not in seen:
-                        seen.add(conditional_token.idx)
-                        issues.append({
-                            "type": "DescriptiveStatementFirst",
-                            "message": f"Write the condition first. Use '{conditional_token.text.lower()} ..., [command]' instead of '[command] ... {conditional_token.text.lower()} ...'.",
-                            "offset": conditional_token.idx,
-                            "length": len(conditional_token.text),
-                        })
+            if first_token and conditional_token and conditional_token.i > first_token.i and conditional_token.idx not in seen:
+                seen.add(conditional_token.idx)
+                issues.append({
+                    "type": "DescriptiveStatementFirst",
+                    "message": f"Write the condition first. Use '{conditional_token.text.lower()} ..., [command]' instead of '[command] ... {conditional_token.text.lower()} ...'.",
+                    "offset": conditional_token.idx,
+                    "length": len(conditional_token.text),
+                })
 
     return issues
 
@@ -277,4 +261,5 @@ def check_notes(doc):
 # Import nlp from main module (already loaded there)
 # This avoids duplicate model loading
 import spacy as spacy_module
+
 nlp = spacy_module.load("en_core_web_sm")

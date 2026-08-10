@@ -1,16 +1,16 @@
-#!/usr/bin/env python3
 """Tests for Section 9 (Writing practices) checks."""
 import pytest
 import spacy
-from checks_section9 import (
-    check_word_usage,
+from stelint.checks_section9 import (
     check_consistent_style,
-    check_phrasal_verbs,
     check_consistent_terminology,
     check_different_sentence_constructions,
-    check_word_for_word_replacement,
     check_non_approved_words,
+    check_phrasal_verbs,
+    check_word_for_word_replacement,
+    check_word_usage,
 )
+
 
 @pytest.fixture
 def nlp_model():

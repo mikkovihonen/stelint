@@ -5,7 +5,6 @@ import re
 import sys
 from pathlib import Path
 
-
 CHANGELOG_PATH = Path("CHANGELOG.md")
 VERSION_HEADING_RE = re.compile(r'^## \[([^\]]+)\]', re.MULTILINE)
 

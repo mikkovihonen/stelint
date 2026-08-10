@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
 """Tests for Section 2 (Multi-word nouns) checks."""
 import pytest
 import spacy
-from checks_section2 import (
+from stelint.checks_section2 import (
     check_multi_word_nouns,
-    check_too_long_technical_nouns,
     check_technical_noun_clarity,
+    check_too_long_technical_nouns,
 )
+
 
 @pytest.fixture
 def nlp_model():

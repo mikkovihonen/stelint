@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Shared helper functions for ASD-STE100 checks.
 
@@ -11,7 +10,7 @@ import spacy
 # Load spaCy model once at module level for reuse
 try:
     nlp = spacy.load("en_core_web_sm")
-except:
+except (ImportError, OSError, RuntimeError):
     nlp = None
 
 
@@ -38,10 +37,7 @@ def _is_technical_context(token, doc):
         return True
     
     # Check if token is in a technical pattern (e.g., following technical nouns)
-    if token.head.pos_ == "NOUN" and token.head.dep_ in ("compound", "nn"):
-        return True
-    
-    return False
+    return bool(token.head.pos_ == "NOUN" and token.head.dep_ in ("compound", "nn"))
 
 
 def _get_context_words(token, doc, window=3):
@@ -134,8 +130,7 @@ def _get_sentence_depth(sent):
     
     for token in sent:
         depth = _get_token_depth(token)
-        if depth > max_depth:
-            max_depth = depth
+        max_depth = max(max_depth, depth)
     
     return max_depth
 
@@ -281,10 +276,7 @@ def _is_common_pattern_without_article(token, doc):
         return True
     
     # Check if the noun is part of a compound modifier
-    if token.dep_ == "compound" or token.dep_ == "nn":
-        return True
-    
-    return False
+    return bool(token.dep_ == "compound" or token.dep_ == "nn")
 
 
 def _get_paragraph_index(sent, doc):
@@ -454,7 +446,7 @@ def _is_allowed_parentheses_context(content, doc, offset):
     Returns:
         bool: True if parentheses usage is allowed
     """
-    from .glossary import COMMON_UNITS, COMMON_ABBREVIATIONS, EXPLANATION_WORDS
+    from .glossary import COMMON_ABBREVIATIONS, COMMON_UNITS
     
     # Parse the content with spaCy for semantic analysis
     content_doc = nlp(content)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 Section 2 Checks (Multi-word nouns)
 
@@ -15,7 +14,7 @@ This module implements Rule 2.1 (multi-word noun length) and Rule 2.2
 (when technical nouns have more than three words).
 """
 import re
-import spacy
+
 from .glossary import LONG_TECHNICAL_NOUN_PATTERNS
 
 
@@ -112,7 +111,7 @@ def check_too_long_technical_nouns(doc):
             continue
 
         # Check if the chunk matches any known long technical noun patterns
-        chunk_text = ' '.join(words)
+        ' '.join(words)
 
         # Use regex patterns from glossary to match long technical nouns
         for pattern, replacement in LONG_TECHNICAL_NOUN_PATTERNS:

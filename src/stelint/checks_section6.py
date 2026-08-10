@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 Section 6 Checks (Descriptive writing)
 
@@ -16,16 +15,15 @@ Rule 6.4: Use paragraphs to show related information.
 Rule 6.5: Make sure that each paragraph has only one topic.
 Rule 6.6: Make sure that no paragraph has more than six sentences.
 """
-import re
-import spacy
 import numpy as np
+
 from .glossary import COMMON_DETERMINERS
 
 # Load sense2vec model once at module level for reuse
 try:
     from sense2vec import Sense2Vec
     s2v_model = Sense2Vec().from_disk(".pi-container/agent/extensions/prosecco/spacy/s2v")
-except Exception:
+except (ImportError, OSError, FileNotFoundError):
     s2v_model = None
 
 
@@ -59,15 +57,14 @@ def check_information_structure(doc):
                 # Check if the verb is in imperative form
                 # Imperative verbs are typically base form (VB) or present tense (VBP) without a subject
                 has_subject = any(c.dep_ == "nsubj" for c in token.children)
-                if not has_subject and token.tag_ in ("VB", "VBP"):
-                    if token.idx not in seen:
-                        seen.add(token.idx)
-                        issues.append({
-                            "type": "ImperativeInDescription",
-                            "message": "Do not use imperative form in descriptive writing. Use descriptive sentences instead.",
-                            "offset": token.idx,
-                            "length": len(token.text),
-                        })
+                if not has_subject and token.tag_ in ("VB", "VBP") and token.idx not in seen:
+                    seen.add(token.idx)
+                    issues.append({
+                        "type": "ImperativeInDescription",
+                        "message": "Do not use imperative form in descriptive writing. Use descriptive sentences instead.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    })
 
     return issues
 
@@ -139,10 +136,9 @@ def _get_wordnet_synset_count(lemma):
         int - number of synsets
     """
     try:
-        import nltk
         from nltk.corpus import wordnet as wn
         return len(wn.synsets(lemma))
-    except Exception:
+    except (ImportError, OSError):
         return 0
 
 
@@ -162,7 +158,7 @@ def _get_sense2vec_embedding(token):
         key = f"{token.lemma_.lower()}|{token.pos_.lower()}"
         if key in s2v_model:
             return s2v_model[key]
-    except Exception:
+    except (AttributeError, TypeError):
         pass
     return None
 
@@ -281,15 +277,14 @@ def check_key_words(doc):
     # Check for polysemous terms
     for term, tokens in key_terms.items():
         # If a term appears multiple times, check for polysemy
-        if len(tokens) > 1:
-            if _is_polysemous(term, tokens) and tokens[0].idx not in seen:
-                seen.add(tokens[0].idx)
-                issues.append({
-                    "type": "KeyWords",
-                    "message": f"Term '{term}' is used in multiple different contexts. Consider using different terms for clarity.",
-                    "offset": tokens[0].idx,
-                    "length": len(tokens[0].text),
-                })
+        if len(tokens) > 1 and _is_polysemous(term, tokens) and tokens[0].idx not in seen:
+            seen.add(tokens[0].idx)
+            issues.append({
+                "type": "KeyWords",
+                "message": f"Term '{term}' is used in multiple different contexts. Consider using different terms for clarity.",
+                "offset": tokens[0].idx,
+                "length": len(tokens[0].text),
+            })
 
     return issues
 
@@ -479,5 +474,5 @@ def check_paragraph_length(doc):
 try:
     import spacy as spacy_module
     nlp = spacy_module.load("en_core_web_sm")
-except:
+except (ImportError, OSError, RuntimeError):
     nlp = None

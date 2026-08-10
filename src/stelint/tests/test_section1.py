@@ -1,22 +1,22 @@
-#!/usr/bin/env python3
 """Tests for Section 1 (Words) checks."""
 import pytest
 import spacy
-from checks_section1 import (
-    check_approved_words,
-    check_part_of_speech,
-    check_approved_meaning,
+from stelint.checks_section1 import (
     check_approved_forms,
-    check_technical_noun_category,
-    check_non_approved_as_technical,
-    check_technical_noun_as_verb,
-    check_technical_noun_approval,
-    check_regional_slang_jargon,
-    check_consistent_technical_nouns,
-    check_technical_verb_category,
-    check_technical_verb_as_noun,
+    check_approved_meaning,
+    check_approved_words,
     check_british_english,
+    check_consistent_technical_nouns,
+    check_non_approved_as_technical,
+    check_part_of_speech,
+    check_regional_slang_jargon,
+    check_technical_noun_approval,
+    check_technical_noun_as_verb,
+    check_technical_noun_category,
+    check_technical_verb_as_noun,
+    check_technical_verb_category,
 )
+
 
 @pytest.fixture
 def nlp_model():

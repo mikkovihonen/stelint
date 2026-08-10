@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 General Recommendations Checks (GR-1 through GR-8)
 
@@ -29,14 +28,13 @@ GR-8: Possessive form
 The possessive form (also known as the Saxon genitive) adds an apostrophe and "s" to form the possessive. While permitted in STE, use it correctly. If not sure, do not use it.
 """
 import re
+
 from .glossary import (
-    FALSE_FRIENDS,
-    LATIN_ABBREVIATIONS,
-    GENDER_PRONOUNS,
-    CONJUNCTION_THAT_PATTERNS,
     AMBIGUOUS_PRONOUNS,
-    AMBIGUOUS_WITH_VERB_GROUPS,
-    AMBIGUOUS_THIS_CONTEXTS,
+    CONJUNCTION_THAT_PATTERNS,
+    FALSE_FRIENDS,
+    GENDER_PRONOUNS,
+    LATIN_ABBREVIATIONS,
 )
 
 
@@ -132,22 +130,21 @@ def check_ambiguous_pronouns(doc):
 
     for token in doc:
         # Find pronouns
-        if token.pos_ == "PRON" and token.text.lower() in ambiguous_pronouns:
-            if token.idx not in seen:
-                seen.add(token.idx)
+        if token.pos_ == "PRON" and token.text.lower() in ambiguous_pronouns and token.idx not in seen:
+            seen.add(token.idx)
 
-                # Check if multiple noun chunks could be the antecedent
-                # (simplified check: if there are multiple chunks in the same sentence)
-                token_sent = token.sent
-                chunks_in_sent = [c for c in noun_chunks if c.start_char >= token_sent.start_char and c.end_char < token_sent.end_char]
+            # Check if multiple noun chunks could be the antecedent
+            # (simplified check: if there are multiple chunks in the same sentence)
+            token_sent = token.sent
+            chunks_in_sent = [c for c in noun_chunks if c.start_char >= token_sent.start_char and c.end_char < token_sent.end_char]
 
-                if len(chunks_in_sent) > 1:
-                    issues.append({
-                        "type": "AmbiguousPronouns",
-                        "message": f"Replace '{token.text}' with the specific noun it refers to.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+            if len(chunks_in_sent) > 1:
+                issues.append({
+                    "type": "AmbiguousPronouns",
+                    "message": f"Replace '{token.text}' with the specific noun it refers to.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                })
 
     return issues
 
@@ -168,18 +165,17 @@ def check_ambiguous_this(doc):
 
     for token in doc:
         # Find 'this' as a determiner or pronoun
-        if token.text.lower() == "this" and token.pos_ in ("DET", "PRON"):
-            if token.idx not in seen:
-                seen.add(token.idx)
+        if token.text.lower() == "this" and token.pos_ in ("DET", "PRON") and token.idx not in seen:
+            seen.add(token.idx)
 
-                # Check if followed by a verb (potential ambiguity)
-                if token.head.pos_ == "VERB" or token.dep_ in ("nsubj", "dobj"):
-                    issues.append({
-                        "type": "AmbiguousThis",
-                        "message": f"Replace 'this' with the specific noun it refers to.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+            # Check if followed by a verb (potential ambiguity)
+            if token.head.pos_ == "VERB" or token.dep_ in ("nsubj", "dobj"):
+                issues.append({
+                    "type": "AmbiguousThis",
+                    "message": "Replace 'this' with the specific noun it refers to.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                })
 
     return issues
 
@@ -197,16 +193,15 @@ def check_false_friends(doc):
 
     for token in doc:
         word = token.text.lower()
-        if word in FALSE_FRIENDS:
-            if token.idx not in seen:
-                seen.add(token.idx)
-                replacement = FALSE_FRIENDS[word]
-                issues.append({
-                    "type": "FalseFriends",
-                    "message": f"Word '{word}' may be a false friend. Consider using '{replacement}' instead.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+        if word in FALSE_FRIENDS and token.idx not in seen:
+            seen.add(token.idx)
+            replacement = FALSE_FRIENDS[word]
+            issues.append({
+                "type": "FalseFriends",
+                "message": f"Word '{word}' may be a false friend. Consider using '{replacement}' instead.",
+                "offset": token.idx,
+                "length": len(token.text),
+            })
 
     return issues
 
@@ -232,16 +227,15 @@ def check_latin_abbreviations(doc):
     seen = set()
 
     for token in doc:
-        if token.text.lower() in LATIN_ABBREVIATIONS:
-            if token.idx not in seen:
-                seen.add(token.idx)
-                replacement = LATIN_ABBREVIATIONS[token.text.lower()]
-                issues.append({
-                    "type": "LatinAbbreviations",
-                    "message": f"Do not use Latin abbreviation '{token.text}'. Use '{replacement}' instead.",
-                    "offset": token.idx,
-                    "length": len(token.text),
-                })
+        if token.text.lower() in LATIN_ABBREVIATIONS and token.idx not in seen:
+            seen.add(token.idx)
+            replacement = LATIN_ABBREVIATIONS[token.text.lower()]
+            issues.append({
+                "type": "LatinAbbreviations",
+                "message": f"Do not use Latin abbreviation '{token.text}'. Use '{replacement}' instead.",
+                "offset": token.idx,
+                "length": len(token.text),
+            })
 
     return issues
 
@@ -264,28 +258,25 @@ def check_gender_pronouns(doc):
         if token.pos_ == "PRON" and token.tag_ in ("PRP", "PRP$"):
             # Check morphological features for gender
             morph = token.morph
-            if "Gender=Masc" in morph or "Gender=Fem" in morph:
-                if token.idx not in seen:
-                    seen.add(token.idx)
-                    # Get recommended replacement from glossary
-                    word_lower = token.text.lower()
-                    if word_lower in GENDER_PRONOUNS:
-                        replacement = GENDER_PRONOUNS[word_lower]
+            if ("Gender=Masc" in morph or "Gender=Fem" in morph) and token.idx not in seen:
+                seen.add(token.idx)
+                # Get recommended replacement from glossary
+                word_lower = token.text.lower()
+                if word_lower in GENDER_PRONOUNS:
+                    replacement = GENDER_PRONOUNS[word_lower]
+                else:
+                    # Default gender-neutral replacements
+                    if "Masc" in morph or "Fem" in morph:
+                        replacement = "they"
                     else:
-                        # Default gender-neutral replacements
-                        if "Masc" in morph:
-                            replacement = "they"
-                        elif "Fem" in morph:
-                            replacement = "they"
-                        else:
-                            replacement = "they"
+                        replacement = "they"
 
-                    issues.append({
-                        "type": "GenderPronouns",
-                        "message": f"Do not use gender-specific pronoun '{token.text}'. Use '{replacement}' instead.",
-                        "offset": token.idx,
-                        "length": len(token.text),
-                    })
+                issues.append({
+                    "type": "GenderPronouns",
+                    "message": f"Do not use gender-specific pronoun '{token.text}'. Use '{replacement}' instead.",
+                    "offset": token.idx,
+                    "length": len(token.text),
+                })
 
     return issues
 
@@ -303,13 +294,10 @@ def check_possessive_form(doc):
 
     for token in doc:
         # Check for possessive markers
-        if token.text in ("'s", "'"):
+        if token.text in ("'s", "'") and token.dep_ == "case" and token.tag_ == "POS" and token.i > 0:
             # Check if it's a possessive (case dependency)
-            if token.dep_ == "case" and token.tag_ == "POS":
-                # Find the possessor (the noun before the possessive)
-                if token.i > 0:
-                    possessor = doc[token.i - 1]
-                    if possessor.pos_ in ("PROPN", "NOUN"):
+            possessor = doc[token.i - 1]
+            if possessor.pos_ in ("PROPN", "NOUN"):
                         key = possessor.idx
                         if key not in seen:
                             seen.add(key)

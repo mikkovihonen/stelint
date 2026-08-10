@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 checker using spaCy directly (no HTTP server needed).
 Reads from file or stdin, outputs results in Vale-compatible format.
@@ -6,27 +5,39 @@ Reads from file or stdin, outputs results in Vale-compatible format.
 This is the main entry point that imports all check functions from section-specific modules.
 """
 import sys
+
 import spacy
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
 
 # Import check functions from Section 1 (Words)
+# Import check functions from General Recommendations
+from .checks_gr_recommendations import (
+    check_ambiguous_pronouns,
+    check_ambiguous_this,
+    check_ambiguous_with,
+    check_conjunction_that,
+    check_false_friends,
+    check_gender_pronouns,
+    check_latin_abbreviations,
+    check_possessive_form,
+)
 from .checks_section1 import (
-    check_approved_words,
-    check_part_of_speech,
-    check_approved_meaning,
     check_approved_forms,
-    check_technical_noun_category,
-    check_non_approved_as_technical,
-    check_technical_noun_as_verb,
-    check_technical_noun_approval,
-    check_too_long_technical_nouns,
-    check_regional_slang_jargon,
-    check_consistent_technical_nouns,
-    check_technical_verb_category,
-    check_technical_verb_as_noun,
+    check_approved_meaning,
+    check_approved_words,
     check_british_english,
+    check_consistent_technical_nouns,
+    check_non_approved_as_technical,
+    check_part_of_speech,
+    check_regional_slang_jargon,
+    check_technical_noun_approval,
+    check_technical_noun_as_verb,
+    check_technical_noun_category,
+    check_technical_verb_as_noun,
+    check_technical_verb_category,
+    check_too_long_technical_nouns,
 )
 
 # Import check functions from Section 2 (Multi-word nouns)
@@ -37,85 +48,74 @@ from .checks_section2 import (
 
 # Import check functions from Section 3 (Verbs)
 from .checks_section3 import (
-    check_verb_forms,
-    check_verb_tenses,
-    check_past_participle_as_adjective,
-    check_passive_voice,
-    check_passive_voice_with_agent,
     check_ing_forms,
     check_noun_as_verb,
+    check_passive_voice,
+    check_passive_voice_with_agent,
+    check_past_participle_as_adjective,
+    check_verb_forms,
+    check_verb_tenses,
 )
 
 # Import check functions from Section 4 (Sentences)
 from .checks_section4 import (
-    check_short_sentences,
+    check_article_usage,
+    check_connecting_words,
     check_contractions,
     check_forbidden_modals,
-    check_vertical_lists,
-    check_connecting_words,
     check_missing_articles,
-    check_article_usage,
+    check_short_sentences,
+    check_vertical_lists,
 )
 
 # Import check functions from Section 5 (Procedural writing)
 from .checks_section5 import (
-    check_sentence_length_procedural,
+    check_descriptive_statement_first,
     check_multiple_instructions,
     check_non_imperative_in_procedures,
-    check_descriptive_statement_first,
     check_notes,
+    check_sentence_length_procedural,
 )
 
 # Import check functions from Section 6 (Descriptive writing)
 from .checks_section6 import (
     check_information_structure,
     check_key_words,
-    check_sentence_length_descriptive,
+    check_paragraph_length,
     check_paragraph_structure,
     check_paragraph_topic,
-    check_paragraph_length,
+    check_sentence_length_descriptive,
 )
 
 # Import check functions from Section 7 (Safety instructions)
 from .checks_section7 import (
-    check_safety_instruction_format,
     check_safety_instruction_explanation,
+    check_safety_instruction_format,
 )
 
 # Import check functions from Section 8 (Punctuation and word count)
 from .checks_section8 import (
-    check_semicolons,
+    check_hyphenation_patterns,
     check_hyphens,
     check_parentheses_usage,
-    check_word_count_with_parentheses,
-    check_word_count_with_numbers,
-    check_hyphenation_patterns,
+    check_semicolons,
     check_vertical_list_colons,
     check_word_count_all,
+    check_word_count_with_numbers,
+    check_word_count_with_parentheses,
 )
 
 # Import check functions from Section 9 (Writing practices)
 from .checks_section9 import (
-    check_word_usage,
     check_consistent_style,
-    check_phrasal_verbs,
     check_consistent_terminology,
     check_different_sentence_constructions,
-    check_word_for_word_replacement,
     check_non_approved_words,
+    check_phrasal_verbs,
+    check_word_for_word_replacement,
+    check_word_usage,
 )
 
-# Import check functions from General Recommendations
-from .checks_gr_recommendations import (
-    check_conjunction_that,
-    check_ambiguous_with,
-    check_ambiguous_pronouns,
-    check_ambiguous_this,
-    check_false_friends,
-    check_latin_abbreviations,
-    check_gender_pronouns,
-    check_possessive_form,
-)
 
 def main():
     """Main entry point."""
@@ -138,6 +138,7 @@ def main():
     # Load user glossaries if a config path was provided.
     if config_path:
         from pathlib import Path
+
         import stelint.glossary as glossary_mod
         cfg = Path(config_path)
         glossary_mod.set_config_path(cfg)
@@ -186,10 +187,8 @@ def main():
     def _is_in_link(cleaned_offset: int, length: int) -> bool:
         error_end = cleaned_offset + length
         for start, end, rtype in regions:
-            if rtype == "link":
-                # Check if the error span overlaps with the link region.
-                if not (error_end < start or cleaned_offset > end):
-                    return True
+            if rtype == "link" and not (error_end < start or cleaned_offset > end):
+                return True
         return False
 
     # Build a tree structure from regions for suppression traversal.
@@ -275,20 +274,16 @@ def main():
             # Check each pair of adjacent bold markers
             for i in range(0, len(bold_regions) - 1, 2):
                 if i + 1 < len(bold_regions):
-                    s1, e1 = bold_regions[i]
-                    s2, e2 = bold_regions[i + 1]
+                    _s1, e1 = bold_regions[i]
+                    s2, _e2 = bold_regions[i + 1]
                     # Check if they're on the same line (no newline between them)
-                    if '\n' not in cleaned_text[e1:s2]:
-                        # Check if position is between the closing of first and opening of second
-                        if e1 <= cleaned_offset < s2:
-                            return True
+                    if '\n' not in cleaned_text[e1:s2] and e1 <= cleaned_offset < s2:
+                        return True
 
         # Check tree-based suppression
         tree_roots = _build_metadata_tree()
         node = _find_node_at_position(tree_roots, cleaned_offset)
-        if node and issue_type in node.get("suppress", []):
-            return True
-        return False
+        return bool(node and issue_type in node.get("suppress", []))
 
     def _get_suppression_types(region_type: str) -> list[str]:
         """Get the list of issue types that should be suppressed for a region type."""

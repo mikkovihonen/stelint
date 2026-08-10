@@ -1,15 +1,15 @@
-#!/usr/bin/env python3
 """Tests for Section 6 (Descriptive writing) checks."""
 import pytest
 import spacy
-from checks_section6 import (
+from stelint.checks_section6 import (
     check_information_structure,
     check_key_words,
-    check_sentence_length_descriptive,
+    check_paragraph_length,
     check_paragraph_structure,
     check_paragraph_topic,
-    check_paragraph_length,
+    check_sentence_length_descriptive,
 )
+
 
 @pytest.fixture
 def nlp_model():

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Add a word to the project glossary.
 
@@ -12,8 +11,9 @@ Example:
 
 Namespace and constant name are hardcoded to words/NON_APPROVED_WORDS.
 """
-import sys
 import argparse
+import sys
+
 from .glossary import add_to_project_glossary
 
 

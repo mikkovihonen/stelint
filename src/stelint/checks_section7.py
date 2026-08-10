@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 Section 7 Checks (Safety instructions)
 
@@ -15,9 +14,9 @@ Rule 7.2: Start a safety instruction with a clear and accurate command or
           condition.
 Rule 7.3: Give an explanation to show the risk or possible result.
 """
-import re
 import spacy
-from .glossary import SAFETY_KEYWORDS, HIGH_RISK_SAFETY_KEYWORDS, RISK_INDICATORS
+
+from .glossary import HIGH_RISK_SAFETY_KEYWORDS, RISK_INDICATORS, SAFETY_KEYWORDS
 from .shared import _get_paragraph_index
 
 
@@ -96,22 +95,19 @@ def check_safety_instruction_format(doc):
                 has_imperative = False
 
                 for token in instruction_doc:
-                    if token.pos_ == "VERB" and token.tag_ == "VB":
-                        # Check if it's a root verb (imperative form)
-                        if token.dep_ == "ROOT":
-                            has_imperative = True
-                            break
+                    if token.pos_ == "VERB" and token.tag_ == "VB" and token.dep_ == "ROOT":
+                        has_imperative = True
+                        break
 
                 # If no imperative verb found, flag it
-                if not has_imperative and keyword in HIGH_RISK_SAFETY_KEYWORDS:
-                    if first_token.idx not in seen:
-                        seen.add(first_token.idx)
-                        issues.append({
-                            "type": "SafetyInstructionFormat",
-                            "message": f"{keyword} instruction should start with a clear command in imperative form.",
-                            "offset": first_token.idx,
-                            "length": len(first_token.text) + 1,
-                        })
+                if not has_imperative and keyword in HIGH_RISK_SAFETY_KEYWORDS and first_token.idx not in seen:
+                    seen.add(first_token.idx)
+                    issues.append({
+                        "type": "SafetyInstructionFormat",
+                        "message": f"{keyword} instruction should start with a clear command in imperative form.",
+                        "offset": first_token.idx,
+                        "length": len(first_token.text) + 1,
+                    })
 
     return issues
 
@@ -191,7 +187,7 @@ def check_safety_instruction_explanation(doc):
                 seen.add(first_token.idx)
                 issues.append({
                     "type": "SafetyInstructionExplanation",
-                    "message": f"Add an explanation to show the risk or possible result.",
+                    "message": "Add an explanation to show the risk or possible result.",
                     "offset": first_token.idx,
                     "length": len(instruction_text),
                 })
@@ -202,5 +198,5 @@ def check_safety_instruction_explanation(doc):
 # Load spaCy model for safety instruction analysis
 try:
     nlp = spacy.load("en_core_web_sm")
-except:
+except (ImportError, OSError, RuntimeError):
     nlp = None

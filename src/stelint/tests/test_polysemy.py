@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 """Tests for polysemy detection in check_key_words."""
-import pytest
-from checks_section6 import check_key_words
+from stelint.checks_section6 import check_key_words
 
 
 class TestPolysemyDetection:

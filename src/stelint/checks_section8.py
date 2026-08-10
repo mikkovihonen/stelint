@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 Section 8 Checks (Punctuation and word count)
 
@@ -21,21 +20,13 @@ Rule 8.6: Count each of these elements as one word: Numbers, Numbers together wi
           Proper nouns of individuals, groups, organizations, and geopolitical entities.
 Rule 8.7: Hyphenated words count as one word.
 """
-import re
 import spacy
-from .glossary import (
-    FORBIDDEN_PUNCTUATION,
-    COMMON_UNITS,
-    COMMON_ABBREVIATIONS,
-    COMMON_HYPHENATED_TERMS,
-    EXPLANATION_WORDS,
-)
+
 from .shared import (
-    _get_compound_chain,
-    _find_closing_paren,
-    _is_allowed_parentheses_context,
     _count_sentence_words,
-    _find_closing_quote_idx,
+    _find_closing_paren,
+    _get_compound_chain,
+    _is_allowed_parentheses_context,
 )
 
 
@@ -138,15 +129,14 @@ def check_parentheses_usage(doc):
                 content = " ".join(t.text for t in content_tokens)
 
                 # Check if the content is in an allowed context
-                if not _is_allowed_parentheses_context(content, doc, token.idx):
-                    if token.idx not in seen:
-                        seen.add(token.idx)
-                        issues.append({
-                            "type": "Parentheses",
-                            "message": f"Use parentheses only for allowed purposes (references, abbreviations, alternatives, etc.). Found: '{content}'.",
-                            "offset": token.idx,
-                            "length": close_paren.idx + len(close_paren.text) - token.idx,
-                        })
+                if not _is_allowed_parentheses_context(content, doc, token.idx) and token.idx not in seen:
+                    seen.add(token.idx)
+                    issues.append({
+                        "type": "Parentheses",
+                        "message": f"Use parentheses only for allowed purposes (references, abbreviations, alternatives, etc.). Found: '{content}'.",
+                        "offset": token.idx,
+                        "length": close_paren.idx + len(close_paren.text) - token.idx,
+                    })
 
     return issues
 def check_word_count_with_parentheses(doc):
@@ -273,10 +263,7 @@ def check_vertical_list_colons(doc):
     # Use spaCy to find colons in vertical list contexts
     for token in doc:
         # Check for colon punctuation
-        if token.pos_ == "PUNCT" and token.text == ":":
-            # Check if this is in a vertical list context
-            # (colon followed by newline and another item)
-            if token.i + 1 < len(doc) and doc[token.i + 1].text == "\n":
+        if token.pos_ == "PUNCT" and token.text == ":" and token.i + 1 < len(doc) and doc[token.i + 1].text == "\n":
                 # This is a vertical list colon - correct usage
                 # No issue to report
                 pass
@@ -319,5 +306,5 @@ def check_word_count_all(doc):
 # Load spaCy model
 try:
     nlp = spacy.load("en_core_web_sm")
-except:
+except (ImportError, OSError, RuntimeError):
     nlp = None

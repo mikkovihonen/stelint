@@ -1,17 +1,17 @@
-#!/usr/bin/env python3
 """Tests for General Recommendations (GR-1 to GR-8) checks."""
 import pytest
 import spacy
-from checks_gr_recommendations import (
-    check_conjunction_that,
-    check_ambiguous_with,
+from stelint.checks_gr_recommendations import (
     check_ambiguous_pronouns,
     check_ambiguous_this,
+    check_ambiguous_with,
+    check_conjunction_that,
     check_false_friends,
-    check_latin_abbreviations,
     check_gender_pronouns,
+    check_latin_abbreviations,
     check_possessive_form,
 )
+
 
 @pytest.fixture
 def nlp_model():

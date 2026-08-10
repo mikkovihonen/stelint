@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 constants and configuration for spaCy-based grammar checking.
 
@@ -26,10 +25,10 @@ For advanced usage with namespaces and cardinality, use glossary_loader directly
     loader.load('asd-ste100_base.jsonl')
     loader.load('company_glossary.jsonl')  # Override
 """
-import os
 import json
+import os
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 # Path to asd-ste100_base.jsonl
 _CONSTANTS_DIR = Path(__file__).parent
@@ -83,7 +82,7 @@ _NAMESPACE_MAP = {
 }
 
 
-def _apply_jsonl_entry(constants: Dict[str, Any], obj: Dict[str, Any]) -> None:
+def _apply_jsonl_entry(constants: dict[str, Any], obj: dict[str, Any]) -> None:
     """Apply a single JSONL entry to the constants dict, handling __REMOVE__ and tuple keys."""
     name = obj['name']
     data = obj['data']
@@ -112,7 +111,7 @@ def _apply_jsonl_entry(constants: Dict[str, Any], obj: Dict[str, Any]) -> None:
     constants[name] = data
 
 
-def _load_jsonl(path: Path, constants: Dict[str, Any]) -> None:
+def _load_jsonl(path: Path, constants: dict[str, Any]) -> None:
     """Load all entries from a JSONL file into the constants dict."""
     with open(path, 'r', encoding='utf-8') as f:
         for line in f:
@@ -148,7 +147,7 @@ def _find_config() -> Path | None:
     return None
 
 
-def _load_constants(config_path: Path | None = None) -> Dict[str, Any]:
+def _load_constants(config_path: Path | None = None) -> dict[str, Any]:
     """Load constants: base (always, lowest cardinality) + optional user glossaries."""
     constants = {}
 
@@ -183,9 +182,9 @@ def _load_constants(config_path: Path | None = None) -> Dict[str, Any]:
                 # lowest cardinality and cannot be overridden.
                 if glossary_path.resolve() == _CONSTANTS_FILE.resolve():
                     raise ValueError(
-                        f"asd-ste100_base.jsonl must not be referenced in "
-                        f"glossaries.yaml. It is always loaded first with the "
-                        f"lowest cardinality and cannot be overridden."
+                        "asd-ste100_base.jsonl must not be referenced in "
+                        "glossaries.yaml. It is always loaded first with the "
+                        "lowest cardinality and cannot be overridden."
                     )
                 _load_jsonl(glossary_path, constants)
 
@@ -256,7 +255,7 @@ def get_namespace(constant_name: str) -> str:
     return _NAMESPACE_MAP.get(constant_name, 'general')
 
 
-def get_all_constants() -> Dict[str, Any]:
+def get_all_constants() -> dict[str, Any]:
     """
     Get all loaded constants.
 
@@ -266,7 +265,7 @@ def get_all_constants() -> Dict[str, Any]:
     return _constants.copy()
 
 
-def add_to_project_glossary(namespace: str, name: str, key: str, value, project_glossary_path: str = None):
+def add_to_project_glossary(namespace: str, name: str, key: str, value, project_glossary_path: str | None = None):
     """
     Add an entry to the project glossary file.
 
@@ -335,8 +334,7 @@ def add_to_project_glossary(namespace: str, name: str, key: str, value, project_
 
     # Write back to file
     with open(project_glossary_path, 'w', encoding='utf-8') as f:
-        for entry in entries:
-            f.write(json.dumps(entry) + '\n')
+        f.writelines(json.dumps(entry) + '\n' for entry in entries)
 
     return 'added'
 

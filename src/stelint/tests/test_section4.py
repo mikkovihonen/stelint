@@ -1,16 +1,16 @@
-#!/usr/bin/env python3
 """Tests for Section 4 (Sentences) checks."""
 import pytest
 import spacy
-from checks_section4 import (
-    check_short_sentences,
+from stelint.checks_section4 import (
+    check_article_usage,
+    check_connecting_words,
     check_contractions,
     check_forbidden_modals,
-    check_vertical_lists,
-    check_connecting_words,
     check_missing_articles,
-    check_article_usage,
+    check_short_sentences,
+    check_vertical_lists,
 )
+
 
 @pytest.fixture
 def nlp_model():

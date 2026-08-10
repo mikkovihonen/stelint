@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ASD-STE100 Section 9 Checks (Writing practices)
 
@@ -15,11 +14,11 @@ Consistent style
 Rule 9.4: When you select terminology or wording, always use a consistent style.
 """
 import spacy
+
 from .glossary import (
-    PHRASAL_VERBS,
-    CONSISTENT_STYLE_PATTERNS,
-    RESTRICTED_VERB_PHRASES,
     COMMON_COMPOUND_NOUNS,
+    CONSISTENT_STYLE_PATTERNS,
+    PHRASAL_VERBS,
 )
 from .shared import _get_restricted_verb_replacement
 
@@ -48,26 +47,20 @@ def check_different_sentence_constructions(doc):
     # Detect passive voice patterns using spaCy
     for token in doc:
         # Check for "must be + past participle" pattern
-        if token.lemma_ == "must" and token.pos_ == "MOD":
-            # Find the main verb
-            if token.i + 1 < len(doc):
-                next_token = doc[token.i + 1]
-                if next_token.lemma_ == "be" and next_token.dep_ == "auxpass":
-                    # Check if next token is a past participle
-                    if next_token.i + 1 < len(doc):
-                        main_verb = doc[next_token.i + 1]
-                        if main_verb.pos_ == "VERB" and main_verb.tag_ in ("VBD", "VBN"):
-                            # This is a passive construction that should use imperative form
-                            if token.idx not in seen:
-                                seen.add(token.idx)
-                                replacement = main_verb.lemma_
+        if token.lemma_ == "must" and token.pos_ == "MOD" and token.i + 1 < len(doc):
+            next_token = doc[token.i + 1]
+            if next_token.lemma_ == "be" and next_token.dep_ == "auxpass" and next_token.i + 1 < len(doc):
+                main_verb = doc[next_token.i + 1]
+                if main_verb.pos_ == "VERB" and main_verb.tag_ in ("VBD", "VBN") and token.idx not in seen:
+                    seen.add(token.idx)
+                    replacement = main_verb.lemma_
 
-                                issues.append({
-                                    "type": "DifferentSentenceConstructions",
-                                    "message": f"Use a different sentence construction. Use '{replacement}' instead of 'must be {main_verb.text}'.",
-                                    "offset": token.idx,
-                                    "length": len(token.text) + 1 + len(next_token.text) + 1 + len(main_verb.text),
-                                })
+                    issues.append({
+                        "type": "DifferentSentenceConstructions",
+                        "message": f"Use a different sentence construction. Use '{replacement}' instead of 'must be {main_verb.text}'.",
+                        "offset": token.idx,
+                        "length": len(token.text) + 1 + len(next_token.text) + 1 + len(main_verb.text),
+                    })
 
     return issues
 
@@ -148,7 +141,7 @@ def check_word_usage(doc):
             continue
 
         # Check each pattern in RESTRICTED_WORD_USAGE
-        for pattern_name, pattern_config in RESTRICTED_WORD_USAGE.items():
+        for pattern_config in RESTRICTED_WORD_USAGE.values():
             # Check if the base lemma matches
             if token.lemma_ != pattern_config["base_lemma"]:
                 continue
@@ -198,11 +191,9 @@ def check_word_usage(doc):
                     if found_in_object:
                         conditions_met = False
                         break
-                elif condition["type"] == "not_next_lemma":
-                    # Check if next token does NOT have this lemma
-                    if next_token and next_token.lemma_ == condition["value"]:
-                        conditions_met = False
-                        break
+                elif condition["type"] == "not_next_lemma" and next_token and next_token.lemma_ == condition["value"]:
+                    conditions_met = False
+                    break
 
             if not conditions_met:
                 continue
@@ -314,7 +305,6 @@ def check_consistent_style(doc):
     - Dependency parsing to verify sentence structure
     """
     issues = []
-    seen = set()
 
     # Check for common inconsistent patterns
     text = doc.text
@@ -353,7 +343,6 @@ def check_consistent_terminology(doc):
     seen = set()
 
     # Track technical nouns and their contexts
-    noun_chunk_terms = {}
 
     # Use spaCy noun chunks to detect technical nouns
     for chunk in doc.noun_chunks:
@@ -398,19 +387,14 @@ def check_consistent_terminology(doc):
                 # Check if this noun should be part of a compound term
                 # Use a general rule: if a common technical noun is used alone,
                 # it might need to be part of a compound term
-                if token_lemma in COMMON_COMPOUND_NOUNS:
-                    # Check if this noun is used without a modifier that would make it a compound term
-                    if token.dep_ in ("nsubj", "dobj", "pobj", "attr"):
-                        # This noun is used as a subject, object, or attribute
-                        # Check if it should be part of a compound term
-                        if token.idx not in seen:
-                            seen.add(token.idx)
-                            issues.append({
-                                "type": "ConsistentTerminology",
-                                "message": f"Use consistent terminology. '{token.text}' may need to be part of a compound technical term.",
-                                "offset": token.idx,
-                                "length": len(token.text),
-                            })
+                if token_lemma in COMMON_COMPOUND_NOUNS and token.dep_ in ("nsubj", "dobj", "pobj", "attr") and token.idx not in seen:
+                    seen.add(token.idx)
+                    issues.append({
+                        "type": "ConsistentTerminology",
+                        "message": f"Use consistent terminology. '{token.text}' may need to be part of a compound technical term.",
+                        "offset": token.idx,
+                        "length": len(token.text),
+                    })
 
     return issues
 def check_non_approved_words(doc):
@@ -457,9 +441,8 @@ def check_non_approved_words(doc):
 # Import re for regex operations
 import re
 
-
 # Load spaCy model
 try:
     nlp = spacy.load("en_core_web_sm")
-except:
+except (ImportError, OSError, RuntimeError):
     nlp = None

@@ -14,6 +14,7 @@ classifiers = [
 dependencies = [
     "spacy",
     "numpy",
+    "beautifulsoup4",
 ]
 
 [build-system]

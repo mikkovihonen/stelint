@@ -1,16 +1,16 @@
-#!/usr/bin/env python3
 """Tests for Section 3 (Verbs) checks."""
 import pytest
 import spacy
-from checks_section3 import (
-    check_verb_forms,
-    check_verb_tenses,
-    check_past_participle_as_adjective,
-    check_passive_voice,
-    check_passive_voice_with_agent,
+from stelint.checks_section3 import (
     check_ing_forms,
     check_noun_as_verb,
+    check_passive_voice,
+    check_passive_voice_with_agent,
+    check_past_participle_as_adjective,
+    check_verb_forms,
+    check_verb_tenses,
 )
+
 
 @pytest.fixture
 def nlp_model():
