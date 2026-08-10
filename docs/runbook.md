@@ -39,7 +39,7 @@ mkdir -p ~/.local/share/s2v
 tar -xzf s2v-reddit-2015-distinct.model.tar.gz -C ~/.local/share/s2v
 
 # 3. Set the environment variable
-export SENSE2VEC_PATH=~/.local/share/s2v
+export STELINT_S2V_PATH=~/.local/share/s2v
 ```
 
 ## Quick start

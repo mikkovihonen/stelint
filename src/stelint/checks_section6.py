@@ -23,15 +23,15 @@ from .glossary import COMMON_DETERMINERS
 # Load sense2vec model once at module level for reuse
 # The model is not bundled with the package due to its size (584MB).
 # Users can optionally install it for enhanced checking:
-#   1. Download: wget https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v-reddit-2015-distinct.model
+#   1. Download: wget https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v-reddit-2015-distinct.model.tar.gz
 #   2. Extract: mkdir -p ~/.local/share/s2v && tar -xzf s2v-reddit-2015-distinct.model.tar.gz -C ~/.local/share/s2v
-#   3. Set environment variable: export SENSE2VEC_PATH=~/.local/share/s2v
+#   3. Set environment variable: export STELINT_S2V_PATH=~/.local/share/s2v
 try:
     import os
 
     from sense2vec import Sense2Vec
 
-    s2v_path = os.environ.get("SENSE2VEC_PATH", "")
+    s2v_path = os.environ.get("STELINT_S2V_PATH", "")
     if s2v_path:
         s2v_model = Sense2Vec().from_disk(s2v_path)
     else:
