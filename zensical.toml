@@ -14,7 +14,7 @@ nav = [
 ]
 
 [project.theme]
-custom_dir = "overrides"
+custom_dir = "zensical"
 language = "en"
 features = [
   "navigation.footer",
