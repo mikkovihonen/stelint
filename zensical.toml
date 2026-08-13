@@ -3,7 +3,7 @@ site_url = "https://mikkovihonen.github.io/stelint/"
 site_name = "Stelint"
 repo_url = "https://github.com/mikkovihonen/stelint"
 repo_name = "mikkovihonen/stelint"
-copyright = "Copyright &copy; 2026 Stelint"
+copyright = "Copyright &copy; 2026 Mikko Vihonen. Licensed under MIT."
 # `docs/index.md` is a symlink to the repo-root README.md, so the project
 # homepage and the site homepage stay in sync from a single source.
 nav = [
@@ -24,6 +24,7 @@ features = [
 [[project.extra.social]]
 icon = "simple/pypi"
 link = "https://pypi.org/project/stelint/"
+name = "PyPI"
 
 [[project.theme.palette]]
 media = "(prefers-color-scheme)"
