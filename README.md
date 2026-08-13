@@ -1,5 +1,11 @@
 # Stelint
 
+<div align="center" style="margin-top:50px;text-align:center;" markdown="1">
+
+<img src="docs/assets/logo.png" alt="stelint logo">
+
+</div>
+
 Stelint is an ASD-STE100 linter built with spaCy. It checks whether your text conforms to the Simplified Technical English (STE) specification and reports issues in Vale-compatible format.
 
 > **Note:** This project is in **alpha** stage. APIs and behavior may change without notice.
