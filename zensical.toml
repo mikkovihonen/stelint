@@ -21,6 +21,9 @@ features = [
   "search.highlight",
 ]
 
+[project.extra]
+generator = false
+
 [[project.extra.social]]
 icon = "simple/pypi"
 link = "https://pypi.org/project/stelint/"
