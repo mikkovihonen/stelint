@@ -62,6 +62,9 @@ jobs:
       - name: Build docs site
         run: uv run python -m zensical build
 
+      - name: Fix asset paths
+        run: uv run python scripts/post_build.py site
+
       - name: Verify build output
         run: |
           if [ ! -d "site" ] || [ -z "$(ls -A site 2>/dev/null)" ]; then
