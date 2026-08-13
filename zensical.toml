@@ -19,3 +19,7 @@ features = [
   "navigation.top",
   "search.highlight",
 ]
+
+[[project.extra.social]]
+icon = "simple/pypi"
+link = "https://pypi.org/project/stelint/"
