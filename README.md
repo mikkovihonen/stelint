@@ -1,8 +1,8 @@
 # Stelint
 
-<div align="center" style="margin-top:50px;text-align:center;" markdown="1">
+<div align="center" style="margin-bottom:20px;text-align:center;" markdown="1">
 
-<img src="docs/assets/logo.png" alt="stelint logo">
+<img style="height:100px;" src="docs/assets/logo.png" alt="stelint logo">
 
 </div>
 
