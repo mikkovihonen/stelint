@@ -2,6 +2,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
+  white-space: nowrap;
 }
 
 .md-social .md-social__link svg {
@@ -12,4 +13,5 @@
 
 .md-social .md-social__link span {
   font-size: 0.85em;
+  white-space: nowrap;
 }

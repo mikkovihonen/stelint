@@ -21,8 +21,8 @@
       {% set name = split_and_get(url, "/", 0) %}
     {% endif %}
     <a href="{{ social.link }}" target="_blank" rel="{{ rel }}" title="{{ name | e }}" class="md-social__link">
-      {% include ".icons/" ~ social.icon ~ ".svg" %}
       <span>{{ name }}</span>
+      {% include ".icons/" ~ social.icon ~ ".svg" %}
     </a>
   {% endfor %}
 </div>
