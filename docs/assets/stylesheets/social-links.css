@@ -1,0 +1,15 @@
+.md-social .md-social__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.md-social .md-social__link svg {
+  height: 1.2em;
+  width: 1.2em;
+  flex-shrink: 0;
+}
+
+.md-social .md-social__link span {
+  font-size: 0.85em;
+}

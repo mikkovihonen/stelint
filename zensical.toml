@@ -4,8 +4,7 @@ site_name = "Stelint"
 repo_url = "https://github.com/mikkovihonen/stelint"
 repo_name = "mikkovihonen/stelint"
 copyright = "Copyright &copy; 2026 Mikko Vihonen. Licensed under MIT."
-
-extra_css = ["zensical/stylesheets/extra.css"]
+extra_css = ["assets/stylesheets/social-links.css"]
 # `docs/index.md` is a symlink to the repo-root README.md, so the project
 # homepage and the site homepage stay in sync from a single source.
 nav = [
