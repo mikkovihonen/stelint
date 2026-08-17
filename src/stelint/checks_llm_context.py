@@ -54,10 +54,13 @@ def classify_sentences(doc) -> dict[int, str]:
     try:
         result = llm_chat(
             [{"role": "user", "content": prompt}],
-            max_tokens=500,
+            max_tokens=4000,
         )
     except Exception as e:
         print(f"stelint: LLM context classification failed: {e}", file=sys.stderr)
+        return {}
+
+    if not result:
         return {}
 
     return _parse_classification(result, len(sentences))
@@ -107,49 +110,38 @@ def _build_classification_prompt(sentences: list[tuple[int, str]]) -> str:
     Returns:
         Prompt string for the LLM.
     """
-    example_sentences = (
-        "1. 'Remove the cap.' → PROCEDURAL\n"
-        "2. 'The cap is made of rubber.' → DESCRIPTIVE\n"
-        "3. 'Caution: Hot surface.' → SAFETY\n"
-        "4. 'Install the bolt and tighten to 5 Nm.' → PROCEDURAL\n"
-        "5. 'The system must operate between -20°C and 80°C.' → SAFETY\n"
-        "6. 'Water flows through the heat exchanger.' → DESCRIPTIVE\n"
-    )
-
     prompt_parts = [
-        "You are an ASD-STE100 technical writing expert.",
+        "Classify each sentence as PROCEDURAL, DESCRIPTIVE, or SAFETY.",
         "",
-        "Classify each sentence as one of: PROCEDURAL, DESCRIPTIVE, or SAFETY.",
+        "PROCEDURAL: imperative verb (Remove, Install, Check).",
+        "DESCRIPTIVE: states a fact or property.",
+        "SAFETY: contains Caution/Danger/Warning or safety constraint with must/shall.",
         "",
-        "Definitions:",
-        "- PROCEDURAL: gives an instruction or work step. Usually starts with an",
-        "  imperative verb (Remove, Install, Check, Verify). Describes actions.",
-        "- DESCRIPTIVE: states a fact, property, condition, or relationship.",
-        "  Describes what something IS or HOW something WORKS.",
-        "- SAFETY: contains safety signal words (Caution, Danger, Warning, Note)",
-        "  or describes safety-critical constraints.",
-        "",
-        "Rules:",
-        "- A sentence starting with 'Caution:', 'Danger:', or 'Warning:' is SAFETY.",
-        "- A sentence with 'must' or 'shall' about a safety constraint is SAFETY.",
-        "- An imperative sentence is PROCEDURAL unless it's a safety instruction.",
-        "- A declarative sentence describing properties is DESCRIPTIVE.",
+        "Output format: just 'NUMBER TYPE' per line, nothing else.",
         "",
         "Examples:",
-        example_sentences,
-        "Return your answers as: '1:TYPE 2:TYPE 3:TYPE ...'",
+        "1 PROCEDURAL",
+        "2 DESCRIPTIVE",
+        "3 SAFETY",
         "",
-        "Now classify these sentences from the document:",
     ]
 
     for idx, text in sentences:
-        prompt_parts.append(f"{idx + 1}. '{text}'")
+        prompt_parts.append(f"{idx + 1} '{text}'")
+
+    prompt_parts.append("\nClassify:")
 
     return "\n".join(prompt_parts)
 
 
 def _parse_classification(result: str, expected_count: int) -> dict[int, str]:
     """Parse the LLM classification result.
+
+    Handles multiple output formats:
+    - "1:PROCEDURAL 2:DESCRIPTIVE 3:SAFETY"
+    - "1. 'text' → PROCEDURAL"
+    - "1 PROCEDURAL"
+    - "1: PROCEDURAL"
 
     Args:
         result: LLM response string.
@@ -159,25 +151,26 @@ def _parse_classification(result: str, expected_count: int) -> dict[int, str]:
         Dict mapping sentence index to context type.
     """
     classification = {}
+    valid_types = {"PROCEDURAL", "DESCRIPTIVE", "SAFETY"}
 
-    # Match patterns like "1:PROCEDURAL", "2:DESCRIPTIVE", etc.
-    pattern = re.compile(r"\b(\d+):(\w+)\b")
-    matches = pattern.findall(result)
+    # Pattern 1: "N:TYPE" or "N: TYPE"
+    pattern1 = re.compile(r"\b(\d+)\s*:\s*(\w+)\b")
+    # Pattern 2: "N. ... → TYPE" (arrow notation)
+    pattern2 = re.compile(r"\b(\d+)\b.*?→\s*(PROCEDURAL|DESCRIPTIVE|SAFETY)", re.IGNORECASE)
+    # Pattern 3: "N TYPE" (space-separated, one per line)
+    pattern3 = re.compile(
+        r"^\s*(\d+)\s+(PROCEDURAL|DESCRIPTIVE|SAFETY)\s*$",
+        re.IGNORECASE | re.MULTILINE,
+    )
 
-    for match in matches:
-        idx_str, sent_type = match
-        idx = int(idx_str) - 1  # Convert to 0-indexed
+    for pattern in (pattern1, pattern2, pattern3):
+        for match in pattern.finditer(result):
+            idx_str = match.group(1)
+            sent_type = match.group(2).upper()
+            idx = int(idx_str) - 1  # Convert to 0-indexed
 
-        if 0 <= idx < expected_count:
-            sent_type_upper = sent_type.upper()
-            if sent_type_upper in _CONTEXT_SUPPRESSIONS:
-                classification[idx] = sent_type_upper
-            elif sent_type_upper == "SAFETY":
-                classification[idx] = "SAFETY"
-            elif sent_type_upper == "PROCEDURAL":
-                classification[idx] = "PROCEDURAL"
-            elif sent_type_upper == "DESCRIPTIVE":
-                classification[idx] = "DESCRIPTIVE"
+            if 0 <= idx < expected_count and sent_type in valid_types:
+                classification[idx] = sent_type
 
     return classification
 
