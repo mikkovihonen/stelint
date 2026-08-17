@@ -318,6 +318,21 @@ uv run python -m stelint file.md
   can detect subtle meaning differences within the same POS (e.g. "run" meaning
   *execute* vs. *manage*, both as VERB).
 
+### Context classification
+
+When LLM checks are enabled, stelint also classifies each sentence as
+**PROCEDURAL**, **DESCRIPTIVE**, or **SAFETY**, then suppresses context-
+inappropriate issues:
+
+| Sentence type | Suppresses |
+|---|---|
+| **PROCEDURAL** | `ImperativeInDescription`, `ParagraphStructure`, `ParagraphLength`, `ParagraphTopic` |
+| **DESCRIPTIVE** | `NonImperativeInProcedures`, `SentenceLength` |
+| **SAFETY** | `ForbiddenModals` |
+
+This prevents contradictory flags (e.g., imperative mood being flagged as wrong
+in both procedural and descriptive contexts).
+
 ### Performance
 
 - LLM checks are fully optional. Stelint works identically without them.
@@ -325,6 +340,7 @@ uv run python -m stelint file.md
 - LLM failures are non-fatal — stelint continues with spaCy results only.
 - Results are cached per document to avoid redundant LLM calls.
 - Words appearing fewer than 3 times are skipped to avoid noise.
+- Rule-based pre-filters bypass the LLM for obvious cases, reducing latency.
 
 ## Development workflow
 

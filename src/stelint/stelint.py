@@ -467,11 +467,14 @@ def main():
         # LLM failures must not break stelint.
         pass
 
-    # LLM false positive filter (optional, requires STELINT_LLM_BASE_URL env var)
+    # LLM context classification + false positive filter
+    # (optional, requires STELINT_LLM_BASE_URL env var)
     try:
+        from .checks_llm_context import classify_sentences
         from .checks_llm_fp import filter_false_positives
 
-        all_issues = filter_false_positives(all_issues, doc)
+        sentence_types = classify_sentences(doc)
+        all_issues = filter_false_positives(all_issues, doc, sentence_types=sentence_types)
     except Exception:
         # Filter failures must not break stelint.
         pass

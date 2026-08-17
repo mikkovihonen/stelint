@@ -29,15 +29,21 @@ _MIN_ISSUES_FOR_LLM = 2
 _MAX_TOTAL_ISSUES = 20
 
 
-def filter_false_positives(issues: list[dict], doc) -> list[dict]:
+def filter_false_positives(
+    issues: list[dict],
+    doc,
+    sentence_types: dict[int, str] | None = None,
+) -> list[dict]:
     """Filter spaCy check results using LLM validation.
 
     Combines all filterable issues into a single LLM prompt to minimize
     round-trip latency. Issues the LLM marks as FALSE_POSITIVE are removed.
+    Optionally applies context-based suppressions (procedural vs descriptive).
 
     Args:
         issues: List of issue dicts from spaCy checks.
         doc: A spaCy Doc object for context lookups.
+        sentence_types: Optional dict mapping sentence index to context type.
 
     Returns:
         Filtered list of issues with false positives removed.
@@ -82,6 +88,10 @@ def filter_false_positives(issues: list[dict], doc) -> list[dict]:
     for issue in filterable:
         if issue["offset"] in confirmed_offsets:
             confirmed.append(issue)
+
+    # Apply context-based suppressions if sentence types were provided.
+    if sentence_types:
+        confirmed = _apply_context_suppressions(confirmed, sentence_types, doc)
 
     if len(confirmed) < len(issues):
         suppressed = len(issues) - len(confirmed)
@@ -303,3 +313,69 @@ def _validate_all(issues: list[dict], doc) -> set[int]:
         return {i["offset"] for i in issues}
 
     return kept
+
+
+# Context-based suppression rules.
+# Key: sentence type, Value: set of issue types to suppress.
+_CONTEXT_SUPPRESSIONS: dict[str, set[str]] = {
+    "PROCEDURAL": {
+        "ImperativeInDescription",
+        "ParagraphStructure",
+        "ParagraphLength",
+        "ParagraphTopic",
+    },
+    "DESCRIPTIVE": {
+        "NonImperativeInProcedures",
+        "SentenceLength",
+    },
+    "SAFETY": {
+        "ForbiddenModals",
+    },
+}
+
+
+def _apply_context_suppressions(
+    issues: list[dict],
+    sentence_types: dict[int, str],
+    doc,
+) -> list[dict]:
+    """Suppress issues that don't apply to the sentence's context.
+
+    Args:
+        issues: List of issue dicts with 'type' and 'offset' keys.
+        sentence_types: Dict mapping sentence index to context type.
+        doc: spaCy Doc object for offset-to-sentence mapping.
+
+    Returns:
+        Filtered list of issues.
+    """
+    if not sentence_types:
+        return issues
+
+    filtered = []
+    for issue in issues:
+        sent_idx = _sentence_index_for_offset(issue["offset"], doc)
+        sent_type = sentence_types.get(sent_idx)
+
+        if sent_type and issue["type"] in _CONTEXT_SUPPRESSIONS.get(sent_type, set()):
+            continue
+
+        filtered.append(issue)
+
+    return filtered
+
+
+def _sentence_index_for_offset(offset: int, doc) -> int:
+    """Find the sentence index for a given character offset.
+
+    Args:
+        offset: Character offset in the document.
+        doc: spaCy Doc object.
+
+    Returns:
+        Sentence index, or -1 if not found.
+    """
+    for i, sent in enumerate(doc.sents):
+        if sent.start_char <= offset < sent.end_char:
+            return i
+    return -1
