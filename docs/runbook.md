@@ -285,6 +285,47 @@ The preprocessor automatically suppresses certain checks inside specific regions
 
 Use `--include-all` to disable all metadata-based suppression.
 
+## LLM-powered checks
+
+Stelint can use a large language model to detect issues that spaCy cannot,
+such as words used with different meanings in different parts of the document
+(same-part-of-speech polysemy).
+
+### Enable LLM checks
+
+Set the following environment variables:
+
+| Variable | Description | Example |
+|---|---|---|
+| `STELINT_LLM_BASE_URL` | OpenAI-compatible API endpoint | `http://llama:9999/v1` |
+| `STELINT_LLM_MODEL` | Model name (default: `local-ornith`) | `local-ornith` |
+| `STELINT_LLM_API_KEY` | API key (any non-empty string for local models) | `sk-no-key` |
+
+Example:
+
+```bash
+export STELINT_LLM_BASE_URL="http://llama:9999/v1"
+export STELINT_LLM_MODEL="local-ornith"
+export STELINT_LLM_API_KEY="sk-no-key"
+uv run python -m stelint file.md
+```
+
+### What the LLM checks
+
+- **LLMPolysemy**: Detects when the same word is used with different meanings
+  across the document, even when the part of speech is the same. spaCy can only
+  detect polysemy at the POS level (e.g. "light" as NOUN vs ADJ), but the LLM
+  can detect subtle meaning differences within the same POS (e.g. "run" meaning
+  *execute* vs. *manage*, both as VERB).
+
+### Performance
+
+- LLM checks are fully optional. Stelint works identically without them.
+- Each LLM call has a 30-second timeout.
+- LLM failures are non-fatal — stelint continues with spaCy results only.
+- Results are cached per document to avoid redundant LLM calls.
+- Words appearing fewer than 3 times are skipped to avoid noise.
+
 ## Development workflow
 
 | Task | Command |

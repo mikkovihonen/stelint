@@ -457,6 +457,25 @@ def main():
     all_issues.extend(check_gender_pronouns(doc))
     all_issues.extend(check_possessive_form(doc))
 
+    # LLM-powered checks (optional, requires STELINT_LLM_BASE_URL env var)
+    try:
+        from .checks_llm import check_llm_polysemy
+
+        llm_issues = check_llm_polysemy(doc)
+        all_issues.extend(llm_issues)
+    except Exception:
+        # LLM failures must not break stelint.
+        pass
+
+    # LLM false positive filter (optional, requires STELINT_LLM_BASE_URL env var)
+    try:
+        from .checks_llm_fp import filter_false_positives
+
+        all_issues = filter_false_positives(all_issues, doc)
+    except Exception:
+        # Filter failures must not break stelint.
+        pass
+
     # Sort by offset
     all_issues.sort(key=lambda x: x["offset"])
 
