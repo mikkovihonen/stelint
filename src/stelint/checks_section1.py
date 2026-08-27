@@ -96,7 +96,7 @@ def check_approved_words(doc):
                 issues.append(
                     {
                         "type": "ApprovedWords",
-                        "message": f"Word '{word}' is not approved in STE. Use a word that is approved in the dictionary, a technical noun, or a technical verb. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
+                        "message": f"Word '{word}' is not approved in STE. Use a word that is approved in the dictionary, a technical noun, or a technical verb. To allow '{word}' as a technical term, run: python -m stelint.add_to_glossary --key '{word}' --remove",
                         "offset": token.idx,
                         "length": len(token.text),
                     }
@@ -124,6 +124,11 @@ def check_part_of_speech(doc):
         word = token.text.lower()
 
         if word in RESTRICTED_WORDS_POS:
+            # If the word is a technical noun handled with a specific replacement
+            # by check_technical_noun_as_verb (Rule 1.7), skip here to avoid duplicate warnings
+            if word in TECHNICAL_NOUNS_NOT_AS_VERBS:
+                continue
+
             approved_pos, disapproved_pos = RESTRICTED_WORDS_POS[word]
 
             # Check if word is used with disapproved POS
@@ -317,7 +322,7 @@ def check_non_approved_as_technical(doc):
                 issues.append(
                     {
                         "type": "NonApprovedAsTechnical",
-                        "message": f"Word '{word}' is not approved. Only use it as a technical noun. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
+                        "message": f"Word '{word}' is not approved. Only use it as a technical noun. To allow '{word}' as a technical term, run: python -m stelint.add_to_glossary --key '{word}' --remove",
                         "offset": token.idx,
                         "length": len(token.text),
                     }
@@ -408,7 +413,7 @@ def check_technical_noun_approval(doc):
                 issues.append(
                     {
                         "type": "TechnicalNounApproval",
-                        "message": f"Technical noun '{word}' may not be approved in your company/industry. Verify against your terminology database. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
+                        "message": f"Technical noun '{word}' may not be approved in your company/industry. Verify against your terminology database. To allow '{word}' as a technical term, run: python -m stelint.add_to_glossary --key '{word}' --remove",
                         "offset": token.idx,
                         "length": len(token.text),
                     }
@@ -657,7 +662,7 @@ def check_technical_verb_category(doc):
                 issues.append(
                     {
                         "type": "TechnicalVerbCategory",
-                        "message": f"Technical verb '{lemma}' may not be approved in your company/industry. Verify against your terminology database. To allow '{lemma}' as a technical term, run: /prosecco-add-to-glossary '{lemma}'",
+                        "message": f"Technical verb '{lemma}' may not be approved in your company/industry. Verify against your terminology database. To allow '{lemma}' as a technical term, run: python -m stelint.add_to_glossary --key '{lemma}' --remove",
                         "offset": token.idx,
                         "length": len(token.text),
                     }

@@ -54,6 +54,18 @@ class TestCheckPartOfSpeech:
         issues = check_part_of_speech(doc)
         assert isinstance(issues, list)
 
+    def test_technical_noun_skipped_in_part_of_speech(self, nlp_model):
+        """Words in TECHNICAL_NOUNS_NOT_AS_VERBS are skipped in check_part_of_speech to avoid duplicate warnings."""
+        doc = nlp_model("Check the pressure gauge.")
+        pos_issues = check_part_of_speech(doc)
+        # 'check' is in TECHNICAL_NOUNS_NOT_AS_VERBS, so check_part_of_speech skips it
+        assert len(pos_issues) == 0
+
+        tech_issues = check_technical_noun_as_verb(doc)
+        assert len(tech_issues) == 1
+        assert tech_issues[0]["type"] == "TechnicalNounAsVerb"
+        assert "do a check of" in tech_issues[0]["message"]
+
 
 class TestCheckApprovedMeaning:
     """Tests for check_approved_meaning function."""

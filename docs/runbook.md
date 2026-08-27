@@ -59,26 +59,28 @@ cat path/to/file.md | uv run python -m stelint -
 ## Usage
 
 ```
-uv run python -m stelint [OPTIONS] [FILE]
+uv run python -m stelint [OPTIONS] [FILE | DIRECTORY ...]
 ```
 
-| Argument | Description |
+| Option | Description |
 |---|---|
-| `FILE` | Path to a `.md` file to lint. Use `-` to read from stdin. |
-| `--include-all` | Show all warnings, including those inside metadata regions such as headers, bold labels, tables, and code blocks. Without this flag, warnings inside metadata regions are suppressed. |
+| `FILES...` | Path to `.md` file(s) or directories to lint recursively. Use `-` or pipe to read from stdin. |
+| `--format`, `-f` | Output format: `vale` (default), `json`, `github` (GitHub Actions annotations), `sarif` (SARIF v2.1.0), or `summary`. |
+| `--disable` | Comma-separated list of rule names to disable (e.g. `ShortSentences,Hyphens`). |
+| `--enable` | Comma-separated list of rule names to enable (all other rules are disabled). |
+| `--include-all` | Show all warnings, including those inside metadata regions such as headers, bold labels, tables, and code blocks. |
+| `--glossaries` | Path to `glossaries.yaml` config file. |
+| `--quiet`, `-q` | Quiet mode: suppress informational messages. |
 
 ## How it works
 
-1. The input text (Markdown) is preprocessed to strip non-prose elements such as code blocks, links, images, HTML blocks, table rows, and headers.
+1. The input text (Markdown) is preprocessed to strip non-prose elements (code blocks, links, images, HTML blocks, table rows, headers) while preserving exact character offsets.
 2. The cleaned text is processed by a spaCy pipeline.
-3. All ASD-STE100 check functions run against the spaCy document.
-4. Issues are mapped back to their original positions in the input file.
-5. Issues inside metadata regions (headers, bold markers, links, etc.) are suppressed unless `--include-all` is set.
-6. Results are printed in Vale-compatible format:
-
-```
-filename.md:line:col STE100.CheckName: Issue message
-```
+3. **Deterministic Context Classification**: Sentences are automatically classified into `PROCEDURAL`, `DESCRIPTIVE`, or `SAFETY` contexts based on Markdown AST structure (numbered steps, bullet lists, procedural headings). This automatically prevents rule conflicts between Section 5 (procedural) and Section 6 (descriptive) without requiring an LLM.
+4. All ASD-STE100 check functions run against the spaCy document.
+5. Issues are mapped back to their original positions in the input file and deduplicated.
+6. Context-inappropriate and metadata-suppressed issues are filtered out.
+7. Results are emitted in the chosen `--format` (Vale, JSON, GitHub Actions, SARIF, or Summary).
 
 ## Check categories
 
@@ -169,10 +171,38 @@ Stelint covers the following sections of the ASD-STE100 specification:
 uv run python -m stelint docs/manual.md
 ```
 
+### Lint an entire directory recursively
+
+```bash
+uv run python -m stelint docs/
+```
+
 ### Pipe text from another tool
 
 ```bash
-cat CHANGELOG.md | uv run python -m stelint
+cat CHANGELOG.md | uv run python -m stelint -
+```
+
+### Output in JSON or SARIF for CI/CD pipelines
+
+```bash
+# JSON output
+uv run python -m stelint --format json docs/
+
+# SARIF output (for GitHub Code Scanning)
+uv run python -m stelint --format sarif docs/ > results.sarif
+
+# GitHub Actions workflow annotations
+uv run python -m stelint --format github docs/
+
+# Summary statistics
+uv run python -m stelint --format summary docs/
+```
+
+### Disable specific rules
+
+```bash
+uv run python -m stelint --disable ShortSentences,Hyphens docs/manual.md
 ```
 
 ### Include all warnings (even in headers and metadata)
@@ -184,24 +214,21 @@ uv run python -m stelint --include-all manual.md
 ### Use as a Python library
 
 ```python
-import spacy
-from stelint.stelint import main
+from stelint.stelint import LintConfig, lint_file, lint_text
 
-# Load the model and run checks programmatically
-nlp = spacy.load("en_core_web_sm")
+# Lint a string
+issues = lint_text("Check the filter; it is dirty.")
+for issue in issues:
+    print(f"{issue.line}:{issue.column} {issue.rule}: {issue.message}")
 
-# Import individual check functions
-from stelint.checks_section1 import check_approved_words, check_part_of_speech
-from stelint.checks_section4 import check_short_sentences, check_contractions
-from stelint.checks_gr_recommendations import check_conjunction_that
-
-doc = nlp("Your text here.")
-issues = check_approved_words(doc)
+# Lint a file with custom config
+config = LintConfig(disabled_rules={"Semicolons"})
+issues = lint_file("docs/manual.md", config=config)
 ```
 
-## Output format
+## Output formats
 
-By default, only prose issues are reported. Output follows the Vale format:
+### Vale format (default)
 
 ```
 manual.md:12:5 STE100.ShortSentences: Sentence is too long (52 words). Max 35.
@@ -215,6 +242,29 @@ When `--include-all` is used, issues inside metadata regions are also shown with
 table.md:3:1 STE100.MissingArticles: [table_row] Missing article before "pressure".
 ```
 
+### JSON format
+
+```json
+[
+  {
+    "file": "manual.md",
+    "line": 28,
+    "column": 1,
+    "rule": "STE100.PassiveVoice",
+    "rule_type": "PassiveVoice",
+    "message": "Passive voice detected: \"is carried out\".",
+    "region_type": null,
+    "severity": "warning"
+  }
+]
+```
+
+### GitHub Actions format
+
+```
+::warning file=manual.md,line=28,col=1,title=STE100.PassiveVoice::Passive voice detected: "is carried out".
+```
+
 ## Configuration
 
 Stelint uses a layered glossary system. Constants are loaded in cardinality order — later layers override earlier ones.
@@ -225,7 +275,7 @@ Stelint uses a layered glossary system. Constants are loaded in cardinality orde
 
 ### User layer (optional)
 
-Create `glossaries.yaml` anywhere and set `STELINT_GLOSSARIES` to its path (relative to CWD or absolute):
+Create `glossaries.yaml` anywhere and pass its path to the `--glossaries` flag (relative to CWD or absolute):
 
 ```bash
 uv run python -m stelint --glossaries docs/examples/glossaries.yaml file.md
@@ -300,6 +350,9 @@ Set the following environment variables:
 | `STELINT_LLM_BASE_URL` | OpenAI-compatible API endpoint | `http://llama:9999/v1` |
 | `STELINT_LLM_MODEL` | Model name (default: `local-ornith`) | `local-ornith` |
 | `STELINT_LLM_API_KEY` | API key (any non-empty string for local models) | `sk-no-key` |
+| `STELINT_LLM_TYPE` | LLM backend type. Selects the request body that disables reasoning output. See below. | `deepseek` |
+| `STELINT_LLM_THINKING` | Keep reasoning (thinking) output `on` or `off`. Overrides the type default. | `on` |
+| `STELINT_LLM_TIMEOUT` | Request timeout in seconds (default: 60). Raise for slow local models. | `120` |
 
 Example:
 
@@ -310,6 +363,29 @@ export STELINT_LLM_API_KEY="sk-no-key"
 uv run python -m stelint file.md
 ```
 
+### Disable reasoning output
+
+Reasoning models spend tokens on a thought process before the answer.
+Set `STELINT_LLM_TYPE` to the type of your LLM backend to disable reasoning
+output. Stelint maps each type to the request body that the backend expects:
+
+| `STELINT_LLM_TYPE` | Backend | Request sent |
+|---|---|---|
+| `deepseek` | DeepSeek API | `thinking: {"type": "disabled"}` |
+| `vllm` | vLLM and llama.cpp (Qwen3, Gemma 3, DeepSeek, and other thinking models) | `chat_template_kwargs: {"enable_thinking": false}` |
+| `qwen` | Qwen (DashScope) | `enable_thinking: false` |
+| `openrouter` | OpenRouter | `reasoning: {"effort": "none"}` |
+
+The value is case-insensitive. An unset or unknown value leaves the request
+unchanged (reasoning stays enabled). OpenAI o-series models do not support
+full disabling. Their minimum is `reasoning_effort: low`.
+
+Use `STELINT_LLM_THINKING` to override this. Set it to `on` to keep
+reasoning enabled even with a known type, or to `off` to force it off.
+Without the variable, a known type disables reasoning. Accepted values:
+`on`, `off`, `true`, `false`, `1`, `0`, `yes`, `no` (case-insensitive).
+An invalid value is ignored with a warning.
+
 ### What the LLM checks
 
 - **LLMPolysemy**: Detects when the same word is used with different meanings
@@ -317,6 +393,17 @@ uv run python -m stelint file.md
   detect polysemy at the POS level (e.g. "light" as NOUN vs ADJ), but the LLM
   can detect subtle meaning differences within the same POS (e.g. "run" meaning
   *execute* vs. *manage*, both as VERB).
+
+  Candidate collection is a local preprocessing step (no LLM calls). A word is
+  sent to the LLM only if:
+
+  - it appears at least 3 times,
+  - all occurrences have the same part of speech (different POS is handled by
+    the spaCy checks),
+  - it is not a proper noun, stop word, or single-letter word,
+  - if the optional sense2vec model is installed (`STELINT_S2V_PATH`), the
+    model does not know the word with exactly one sense. A monosemous word
+    cannot be polysemous, so it is skipped without an LLM call.
 
 ### Context classification
 
@@ -336,11 +423,17 @@ in both procedural and descriptive contexts).
 ### Performance
 
 - LLM checks are fully optional. Stelint works identically without them.
-- Each LLM call has a 30-second timeout.
+- Each LLM call has a 60-second timeout by default. Set
+  `STELINT_LLM_TIMEOUT` for slower local models.
 - LLM failures are non-fatal — stelint continues with spaCy results only.
 - Results are cached per document to avoid redundant LLM calls.
-- Words appearing fewer than 3 times are skipped to avoid noise.
-- Rule-based pre-filters bypass the LLM for obvious cases, reducing latency.
+- Local pre-filters (occurrence count, POS consistency, optional sense2vec
+  monosemy check) skip words that do not need LLM analysis.
+- Candidates are processed in batches of 5 words per LLM call. Small batches
+  keep each call short on slow and reasoning models.
+- Each prompt shows at most 4 context sentences of 80 characters per word.
+- Token budgets are capped per call (1000 tokens per polysemy batch, 1500 for
+  context classification), which bounds call duration on reasoning models.
 
 ## Development workflow
 

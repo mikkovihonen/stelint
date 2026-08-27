@@ -267,27 +267,306 @@ def _are_sentences_related(sent1, sent2, common_words=None):
     return overlap_ratio > 0.3
 
 
+def _has_determiner_or_possessive(token) -> bool:
+    """Check if a noun has an article, demonstrative, possessive, or determiner modifier."""
+    for c in token.children:
+        # Articles & demonstratives (the, a, an, this, that, these, those)
+        if c.dep_ in ("det", "poss", "predet", "quantmod"):
+            return True
+        if c.tag_ in ("PRP$", "POS"):
+            return True
+        if c.pos_ == "DET":
+            return True
+        if c.pos_ == "PRON" and c.dep_ in ("poss", "det"):
+            return True
+        # Possessive construction like "John's" or "Stelint's" modifying this noun
+        if c.dep_ == "compound" and any(gc.tag_ == "POS" for gc in c.children):
+            return True
+    return False
+
+
+def _is_hyphenated_or_compound_fragment(token, doc) -> bool:
+    """Check if token is part of a hyphenated compound or compound word fragment."""
+    if token.text in ("-", "--", "—", "_"):
+        return True
+    if "-" in token.text or "_" in token.text:
+        return True
+    # Adjacent hyphen check
+    if token.i > 0 and doc[token.i - 1].text in ("-", "--", "—"):
+        return True
+    if token.i + 1 < len(doc) and doc[token.i + 1].text in ("-", "--", "—"):
+        return True
+    return False
+
+
+def _is_numbered_reference(token, doc) -> bool:
+    """Check if token is part of a numbered entity reference (e.g. 'Section 6', 'Figure 2', 'Step 1')."""
+    # Check if any child is a number modifier
+    for c in token.children:
+        if c.dep_ == "nummod" or c.pos_ == "NUM" or c.like_num:
+            return True
+    # Check if the immediately following token is a number or section identifier
+    if token.i + 1 < len(doc):
+        next_tok = doc[token.i + 1]
+        if next_tok.pos_ == "NUM" or next_tok.like_num or (next_tok.text and next_tok.text[0].isdigit()):
+            return True
+    return False
+
+
+def _is_uncountable_or_process_noun(token) -> bool:
+    """Check if token is an uncountable mass noun or process noun using morphology and WordNet."""
+    text_lower = token.text.lower()
+    lemma_lower = token.lemma_.lower()
+
+    # Gerunds and deverbal process nouns (-ing)
+    if text_lower.endswith("ing") and (token.pos_ == "NOUN" or token.tag_ == "NN"):
+        return True
+
+    # Standard abstract and mass noun derivational suffixes
+    abstract_suffixes = (
+        "tion",
+        "sion",
+        "ment",
+        "ance",
+        "ence",
+        "ity",
+        "ness",
+        "ware",
+        "sis",
+        "logy",
+        "ics",
+        "ism",
+        "dom",
+        "hood",
+        "ship",
+    )
+    if text_lower.endswith(abstract_suffixes) or lemma_lower.endswith(abstract_suffixes):
+        return True
+
+    # Query WordNet for semantic category if available
+    try:
+        from nltk.corpus import wordnet as wn
+
+        syns = wn.synsets(lemma_lower, pos=wn.NOUN)
+        if syns:
+            primary = syns[0]
+            concrete_lexnames = {
+                "noun.artifact",
+                "noun.body",
+                "noun.animal",
+                "noun.plant",
+                "noun.person",
+                "noun.food",
+                "noun.object",
+                "noun.location",
+            }
+            if primary.lexname() not in concrete_lexnames:
+                return True
+    except (ImportError, LookupError):
+        pass
+
+    return False
+
+
+def _is_idiomatic_prepositional_expression(token, doc) -> bool:
+    """Check if token is part of a prepositional phrase functioning as an adverbial or predicative modifier."""
+    if token.dep_ == "pobj":
+        prep = token.head
+
+        # Functional prepositions that inherently take bare nominals (e.g. per, via, as)
+        if prep.pos_ == "ADP" and prep.text.lower() in ("per", "via"):
+            return True
+
+        if prep.text.lower() == "as":
+            return True
+
+        # Prepositional phrases acting as adverbial modifiers of verbs or adjectives
+        if prep.dep_ in ("prep", "advmod", "npadvmod", "acl") and prep.head.pos_ in ("VERB", "ADJ", "AUX"):
+            # Abstract nouns, technical terms, or compound nominals in adverbial PPs take zero article
+            if _is_uncountable_or_process_noun(token) or _is_proper_noun_or_technical_term(token):
+                return True
+            if any(c.dep_ in ("compound", "amod") for c in token.children):
+                return True
+
+    return False
+
+
+def _is_in_coordinate_or_enumerated_list(token, doc) -> bool:
+    """Check if token is part of a coordinate list or enumeration sharing a determiner via the dependency tree."""
+    if token.dep_ == "conj":
+        head = token.head
+        visited = set()
+        while head and head.i not in visited:
+            visited.add(head.i)
+            # Head of the conjunction chain has a determiner
+            if _has_determiner_or_possessive(head):
+                return True
+            # Preceding sibling conjunct in the same coordination chain has a determiner
+            for sibling in head.children:
+                if sibling.dep_ == "conj" and sibling.i < token.i and _has_determiner_or_possessive(sibling):
+                    return True
+            if head.dep_ == "conj":
+                head = head.head
+            else:
+                break
+
+    return False
+
+
+def _is_quoted_or_parenthetical(token, doc) -> bool:
+    """Check if token is a quoted example word or a single-word parenthetical."""
+    punct_children = {c.text for c in token.children if c.pos_ == "PUNCT"}
+    if ('"' in punct_children or "'" in punct_children or "`" in punct_children or "“" in punct_children or "‘" in punct_children) or (
+        ("(" in punct_children and ")" in punct_children) or ("[" in punct_children and "]" in punct_children)
+    ):
+        return True
+
+    if token.i > 0 and token.i + 1 < len(doc):
+        prev_t = doc[token.i - 1].text
+        next_t = doc[token.i + 1].text
+        if (prev_t in ('"', "'", "`", "“", "‘", "*", "_") and next_t in ('"', "'", "`", "”", "’", "*", "_")) or (prev_t in ("(", "[") and next_t in (")", "]")):
+            return True
+    return False
+
+
+def _is_proper_noun_or_technical_term(token) -> bool:
+    """Check if token is a proper noun, acronym, or technical identifier via morphosyntax."""
+    # Proper nouns tagged by spaCy
+    if token.pos_ == "PROPN" or token.tag_ in ("NNP", "NNPS"):
+        return True
+
+    # Acronyms and initialisms (e.g. JSON, API, LLM, CLI, URL, POSIX, HTML)
+    if token.text.isupper() and len(token.text) >= 2 and token.text.isalnum():
+        return True
+
+    # Technical identifiers with symbols or digits (e.g. stdin, stdout, config.yaml, x86_64, Model-740)
+    if any(c in "_.-/0123456789" for c in token.text) and len(token.text) > 1:
+        return True
+
+    # Mixed-case or camelCase identifiers (e.g. spaCy, GitHub, DeepSeek)
+    if any(c.isupper() for c in token.text[1:]):
+        return True
+
+    # Non-sentence-initial Titlecase tokens
+    if token.text[0].isupper() and token.sent and token.i != token.sent.start:
+        return True
+
+    return False
+
+
+def _is_likely_verb_misparse(token, doc) -> bool:
+    """Check if a token tagged as NOUN is likely an imperative verb or predicate."""
+    for c in token.children:
+        if c.dep_ == "aux" and c.text.lower() == "to":
+            return True
+        if c.dep_ in ("xcomp", "advcl", "acl") and c.pos_ == "VERB":
+            return True
+    if token.dep_ == "conj" and token.head.pos_ in ("VERB", "AUX"):
+        return True
+    # Conjunction of a misparsed verb head: "Use - or pipe to read from stdin."
+    # spaCy tags the imperative "Use" as NOUN (nsubj of the real verb "read").
+    # Skip conjuncts of such a head. Do not walk further: in "Check valve and
+    # pressure", "pressure" is a conj of noun "valve" (dobj of the verb) and
+    # must stay flagged.
+    if token.dep_ == "conj" and token.head.pos_ == "NOUN":
+        head = token.head
+        if head.dep_ in ("nsubj", "nsubjpass", "ROOT") and head.head.pos_ in ("VERB", "AUX"):
+            return True
+    return False
+
+
+def _is_label_or_definition_header(token, doc) -> bool:
+    """Check if token is part of a definition label before a colon (e.g. 'Output format:', 'Quiet mode:')."""
+    if token.i + 1 < len(doc) and doc[token.i + 1].text == ":":
+        return True
+    for c in token.children:
+        if c.text == ":" and c.i > token.i:
+            return True
+    return False
+
+
+def _is_verbless_list_item_or_label(token, doc) -> bool:
+    """Check if token is in a bullet item, table row fragment, or section label with no finite verb."""
+    text = doc.text
+    line_start = text.rfind("\n", 0, token.idx) + 1
+    line_end = text.find("\n", token.idx) if text.find("\n", token.idx) != -1 else len(text)
+    line_text = text[line_start:line_end]
+
+    line_stripped = line_text.strip()
+    if not line_stripped:
+        return False
+
+    line_tokens = [t for t in doc if line_start <= t.idx < line_end]
+    has_finite_verb = any(t.pos_ in ("VERB", "AUX") and t.dep_ in ("ROOT", "ccomp", "advcl", "conj") and t.tag_ not in ("VBN", "VBG") for t in line_tokens)
+    if not has_finite_verb:
+        # Check if line had a list marker (leading spaces from markdown preprocessing) or is a fragment/heading
+        if line_text.startswith(" ") or line_stripped.startswith(("-", "*", "+", "•", "Example", "Note")):
+            return True
+
+    return False
+
+
 def _is_common_pattern_without_article(token, doc):
     """Check if a noun is in a common pattern that doesn't need an article.
 
-    Uses spaCy dependency parsing to check if the token is in a common
-    pattern that typically doesn't require an article.
-
-    Args:
-        token: spaCy Token object
-        doc: spaCy Doc object
-
-    Returns:
-        bool: True if token is in a common pattern without article
+    Rule 4.5 applies 'when applicable'. Many noun constructions in technical
+    writing do not take articles.
     """
-    # Check if the noun is in a common pattern
-    if token.dep_ == "dobj" or token.dep_ == "pobj":
-        # Direct object or object of preposition
-        # These often don't need articles in technical writing
+    # 1. Plural nouns in general statements (Rule 4.5 applies when applicable)
+    if token.tag_ in ("NNS", "NNPS") or token.morph.get("Number") == ["Plur"]:
         return True
 
-    # Check if the noun is part of a compound modifier
-    return bool(token.dep_ == "compound" or token.dep_ == "nn")
+    # 2. Proper nouns, acronyms, and product/tool names
+    if _is_proper_noun_or_technical_term(token):
+        return True
+
+    # 3. Hyphenated compounds / word fragments (e.g. "pre-filters", "case-insensitive")
+    if _is_hyphenated_or_compound_fragment(token, doc):
+        return True
+
+    # 4. Numbered references ("Section 6", "Figure 2", "Step 3", "Rule 4.5")
+    if _is_numbered_reference(token, doc):
+        return True
+
+    # 5. Coordinate lists sharing an article ("a proper noun, stop word, or single-letter word")
+    if _is_in_coordinate_or_enumerated_list(token, doc):
+        return True
+
+    # 6. Quoted words or single-word parentheticals ("light" as NOUN, (thinking))
+    if _is_quoted_or_parenthetical(token, doc):
+        return True
+
+    # 7. Uncountable mass nouns and process nouns (gerunds)
+    if _is_uncountable_or_process_noun(token):
+        return True
+
+    # 8. Prepositional phrases without articles (e.g. "in JSON format", "by default")
+    if _is_idiomatic_prepositional_expression(token, doc):
+        return True
+
+    # 9. Modifiers in compound nouns or followed by a head noun
+    if token.dep_ in ("compound", "nn", "amod", "nmod", "npadvmod", "meta", "poss"):
+        return True
+    if token.i + 1 < len(doc) and doc[token.i + 1].pos_ in ("NOUN", "PROPN") and doc[token.i + 1].dep_ not in ("conj", "punct"):
+        return True
+
+    # 10. Single-character symbols / identifiers
+    if len(token.text) == 1 and not token.text.isalnum():
+        return True
+
+    # 11. Verbs misparsed as nouns by spaCy
+    if _is_likely_verb_misparse(token, doc):
+        return True
+
+    # 12. Labels before colons (e.g. "Output format: ...", "Quiet mode: ...")
+    if _is_label_or_definition_header(token, doc):
+        return True
+
+    # 13. Verbless bullet list items / check labels (e.g. "- Past participle as adjective")
+    if _is_verbless_list_item_or_label(token, doc):
+        return True
+
+    return False
 
 
 def _get_paragraph_index(sent, doc):
@@ -460,7 +739,10 @@ def _is_allowed_parentheses_context(content, doc, offset):
     from .glossary import COMMON_ABBREVIATIONS, COMMON_UNITS
 
     # Parse the content with spaCy for semantic analysis
-    content_doc = nlp(content)
+    nlp_instance = _get_nlp()
+    if nlp_instance is None:
+        return False
+    content_doc = nlp_instance(content)
 
     # Check for references to illustrations or text using NER
     if content_doc.ents:
@@ -548,7 +830,10 @@ def _count_sentence_words(text):
     from .glossary import COMMON_UNITS
 
     # Parse the text with spaCy
-    sent_doc = nlp(text)
+    nlp_instance = _get_nlp()
+    if nlp_instance is None:
+        return len(text.split())
+    sent_doc = nlp_instance(text)
 
     # Track what to count as one word
     word_count = 0

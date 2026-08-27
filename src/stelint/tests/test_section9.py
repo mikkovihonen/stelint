@@ -109,3 +109,25 @@ class TestCheckNonApprovedWords:
         doc = nlp_model("Check the filter.")
         issues = check_non_approved_words(doc)
         assert isinstance(issues, list)
+
+    def test_self_mapping_entry_is_ignored(self, nlp_model, monkeypatch):
+        """A word mapped to itself must not raise an issue.
+
+        The message would read "Use 'test' instead of 'test'".
+        """
+        import stelint.glossary as glossary
+
+        monkeypatch.setattr(glossary, "NON_APPROVED_WORDS", {"test": "test"})
+        doc = nlp_model("Do a functional test of the pump.")
+        issues = check_non_approved_words(doc)
+        assert issues == []
+
+    def test_legitimate_replacement_still_flagged(self, nlp_model, monkeypatch):
+        """The self-mapping guard must not suppress real entries."""
+        import stelint.glossary as glossary
+
+        monkeypatch.setattr(glossary, "NON_APPROVED_WORDS", {"test": "test", "leverage": "use"})
+        doc = nlp_model("Do a functional test of the pump. Leverage the data.")
+        issues = check_non_approved_words(doc)
+        assert len(issues) == 1
+        assert "leverage" in issues[0]["message"]

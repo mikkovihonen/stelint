@@ -1,77 +1,176 @@
 {
-  "providers": {
-    "local-ornith": {
-        "baseUrl": "http://llama:9999/v1",
-        "api": "openai-completions",
-        "apiKey": "not-required",
-        "compat": {
-            "supportsStore": false,
-            "supportsDeveloperRole": false,
-            "supportsReasoningEffort": false,
-            "supportsUsageInStreaming": false,
-            "supportsStrictMode": false,
-            "supportsLongCacheRetention": false,
-            "maxTokensField": "max_tokens"
-        },
-        "models": [
-            {
-                "id": "ornith-1.0-35b-Q6_K",
-                "name": "ornith-1.0-35b-Q6_K",
-                "contextWindow": 256144,
-                "compactionThreshold": 128072,
-                "maxTokens": 8192,
-                "streaming": true,
-                "toolCalling": true,
-                "vision": true,
-                "reasoning": true,
-                "thinkingFormat": "chat-template",
-                "chat_template_kwargs": {
-                    "$var": "thinking.effort"
-                },
-                "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-                "input": ["text","image"],
-                "options": {
-                    "temperature": 0.2,
-                    "top_p": 0.95,
-                    "top_k": 64
-                }
-            }
-        ],
-        "serverCustomParameters": {
-            "hfModels": {
-                "main": {
-                    "fileFlag": "--model",
-                    "repo": "deepreinforce-ai/Ornith-1.0-35B-GGUF",
-                    "file": "ornith-1.0-35b-Q6_K.gguf",
-                    "dir":"Ornith-1.0-35B-GGUF",
-                    "additionalServerFlags": [],
-                    "sha256": ""
-                }
+    "providers": {
+        "local-qwen": {
+            "baseUrl": "http://llama:9999/v1",
+            "api": "openai-completions",
+            "apiKey": "not-required",
+            "compat": {
+                "supportsStore": false,
+                "supportsDeveloperRole": false,
+                "supportsReasoningEffort": false,
+                "supportsUsageInStreaming": false,
+                "supportsStrictMode": false,
+                "supportsLongCacheRetention": false,
+                "maxTokensField": "max_tokens"
             },
-            "flags":[
-                "--no-mmap",
-                "--mlock",
-                "--kv-offload",
-                "--threads", 10,
-                "--threads-batch", 8,
-                "--parallel", 1,
-                "--batch-size", 8192,
-                "--ubatch-size", 512,
-                "--flash-attn", "on",
-                "--ctx-size", 256144,
-                "--ctx-checkpoints", 32,
-                "--checkpoint-min-step", 256,
-                "--repeat-penalty", 1.0,
-                "--top_p", 0.95,
-                "--top_k", 64,
-                "--prio", 2,
-                "--cache-ram", 4096,
-                "--jinja",
-                "--chat-template-file", ".pi-container/chat-templates/Ornith-1.0-35B-FP8/chat_template.jinja",
-                "--chat-template-kwargs", "{\"enable_thinking\":true}",
-                "--n-gpu-layers", 999
-            ]
+            "models": [
+                {
+                    "id": "Qwen3.8-27B-GGUF",
+                    "name": "Qwen3.8-27B-GGUF",
+                    "contextWindow": 256144,
+                    "compactionThreshold": 128072,
+                    "maxTokens": 8192,
+                    "streaming": true,
+                    "toolCalling": true,
+                    "vision": true,
+                    "reasoning": true,
+                    "thinkingFormat": "chat-template",
+                    "chat_template_kwargs": {
+                        "$var": "thinking.effort"
+                    },
+                    "cost": {
+                        "input": 0,
+                        "output": 0,
+                        "cacheRead": 0,
+                        "cacheWrite": 0
+                    },
+                    "input": [
+                        "text",
+                        "image"
+                    ],
+                    "options": {
+                        "temperature": 0.2,
+                        "top_p": 0.95,
+                        "top_k": 64
+                    }
+                }
+            ],
+            "serverCustomParameters": {
+                "hfModels": {
+                    "main": {
+                        "fileFlag": "--model",
+                        "repo": "unsloth/Qwen3.8-27B-GGUF",
+                        "file": "Qwen3.8-27B-UD-Q8_K_XL.gguf",
+                        "dir": "Qwen3.8-27B-GGUF",
+                        "additionalServerFlags": [],
+                        "sha256": ""
+                    },
+                    "mtp": {
+                        "fileFlag": "--model-draft",
+                        "repo": "unsloth/Qwen3.8-27B-GGUF",
+                        "file": "MTP/mtp-Qwen3.8-27B-Q4_0.gguf",
+                        "dir": "Qwen3.8-27B-GGUF",
+                        "additionalServerFlags": [
+                            "--spec-type",
+                            "draft-mtp",
+                            "--spec-draft-n-max",
+                            "3"
+                        ],
+                        "sha256": ""
+                    },
+                    "mmproj": {
+                        "fileFlag": "--mmproj",
+                        "repo": "unsloth/Qwen3.8-27B-GGUF",
+                        "file": "mmproj-F16.gguf",
+                        "dir": "Qwen3.8-27B-GGUF",
+                        "additionalServerFlags": [],
+                        "sha256": ""
+                    }
+                },
+                "flags": [
+                    "--no-mmap",
+                    "--mlock",
+                    "--kv-offload",
+                    "--threads", 10,
+                    "--threads-batch", 8,
+                    "--parallel", 1,
+                    "--batch-size", 8192,
+                    "--ubatch-size", 512,
+                    "--flash-attn", "on",
+                    "--ctx-size", 256144,
+                    "--ctx-checkpoints", 32,
+                    "--checkpoint-min-step", 256,
+                    "--repeat-penalty", 1.0,
+                    "--top_p", 0.95,
+                    "--top_k", 64,
+                    "--prio", 2,
+                    "--cache-ram", 4096,
+                    "--jinja",
+                    "--chat-template-file",
+                    ".pi-container/chat-templates/Qwen3.8-27B-GGUF/chat_template.jinja",
+                    "--chat-template-kwargs",
+                    "{\"enable_thinking\":true}",
+                    "--n-gpu-layers", 999
+                ]
+            }
+        },
+        "local-gemma": {
+            "baseUrl": "http://llama:9998/v1",
+            "api": "openai-completions",
+            "apiKey": "not-required",
+            "compat": {
+                "supportsStore": false,
+                "supportsDeveloperRole": false,
+                "supportsReasoningEffort": false,
+                "supportsUsageInStreaming": false,
+                "supportsStrictMode": false,
+                "supportsLongCacheRetention": false,
+                "maxTokensField": "max_tokens"
+            },
+            "models": [
+                {
+                    "id": "gemma-4-E4B-it-GGUF",
+                    "name": "gemma-4-E4B-it-GGUF",
+                    "contextWindow": 8192,
+                    "compactionThreshold": 4096,
+                    "maxTokens": 2048,
+                    "streaming": true,
+                    "toolCalling": false,
+                    "vision": false,
+                    "reasoning": false,
+                    "cost": {
+                        "input": 0,
+                        "output": 0,
+                        "cacheRead": 0,
+                        "cacheWrite": 0
+                    },
+                    "input": [
+                        "text"
+                    ],
+                    "options": {
+                        "temperature": 0.1,
+                        "top_p": 0.9,
+                        "top_k": 40
+                    }
+                }
+            ],
+            "serverCustomParameters": {
+                "hfModels": {
+                    "main": {
+                        "fileFlag": "--model",
+                        "repo": "unsloth/gemma-4-E4B-it-GGUF",
+                        "file": "gemma-4-E4B-it-Q4_0.gguf",
+                        "dir": "gemma-4-E4B-it-GGUF",
+                        "additionalServerFlags": [],
+                        "sha256": ""
+                    }
+                },
+                "flags": [
+                    "--threads", 4,
+                    "--threads-batch", 4,
+                    "--parallel", 1,
+                    "--batch-size", 512,
+                    "--ubatch-size", 512,
+                    "--flash-attn", "on",
+                    "--ctx-size", 8192,
+                    "--repeat-penalty", 1.0,
+                    "--top_p", 0.9,
+                    "--top_k", 40,
+                    "--prio", 2,
+                    "--jinja",
+                    "--n-gpu-layers", 999
+                ]
+            }
         }
     }
-  }
 }

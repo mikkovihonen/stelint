@@ -17,11 +17,11 @@ import re
 import sys
 from itertools import islice
 
+from .classifier import get_classifier
 from .llm_client import get_llm_client, llm_chat
 
-# Check types that benefit from LLM false positive filtering.
-_FILTERABLE_CHECKS = {"VerbForms", "ConnectingWords", "PartOfSpeech", "TechnicalVerbAsNoun"}
-
+# Check types that benefit from false positive filtering.
+_FILTERABLE_CHECKS = {"VerbForms", "ConnectingWords", "PartOfSpeech", "TechnicalVerbAsNoun", "MissingArticles"}
 # Minimum filterable issues before invoking LLM (avoids call overhead for trivial cases).
 _MIN_ISSUES_FOR_LLM = 2
 
@@ -34,11 +34,12 @@ def filter_false_positives(
     doc,
     sentence_types: dict[int, str] | None = None,
 ) -> list[dict]:
-    """Filter spaCy check results using LLM validation.
+    """Filter spaCy check results using local ONNX classifier or LLM validation.
 
-    Combines all filterable issues into a single LLM prompt to minimize
-    round-trip latency. Issues the LLM marks as FALSE_POSITIVE are removed.
-    Optionally applies context-based suppressions (procedural vs descriptive).
+    Applies a tiered filtering architecture:
+    - Tier 1: Cheap deterministic rule heuristics (0 ms)
+    - Tier 2: Local ONNX Cross-Encoder classifier (sub-10ms)
+    - Tier 3: Optional external LLM fallback (if configured)
 
     Args:
         issues: List of issue dicts from spaCy checks.
@@ -48,7 +49,10 @@ def filter_false_positives(
     Returns:
         Filtered list of issues with false positives removed.
     """
-    if get_llm_client() is None:
+    classifier = get_classifier()
+    llm_client = get_llm_client()
+
+    if classifier is None and llm_client is None:
         return issues
 
     # Separate filterable and non-filterable issues.
@@ -61,29 +65,36 @@ def filter_false_positives(
         else:
             non_filterable.append(issue)
 
-    if len(filterable) < _MIN_ISSUES_FOR_LLM:
+    if not filterable:
         return issues
 
-    # Apply cheap rule-based pre-filters before the LLM call.
-    # Returns (pre_confirmed, needs_llm) where:
-    #   pre_confirmed = issues confirmed by heuristics (kept without LLM)
-    #   needs_llm     = issues that still need LLM validation
-    pre_confirmed, needs_llm = _apply_rule_based_prefilters(filterable, doc)
+    if classifier is None and len(filterable) < _MIN_ISSUES_FOR_LLM:
+        return issues
 
+    # Apply cheap rule-based pre-filters (Tier 1)
+    pre_confirmed, needs_model = _apply_rule_based_prefilters(filterable, doc)
     confirmed_offsets: set[int] = {i["offset"] for i in pre_confirmed}
 
-    if len(needs_llm) >= _MIN_ISSUES_FOR_LLM:
-        # Truncate to max to keep the prompt manageable.
-        truncated = needs_llm[:_MAX_TOTAL_ISSUES]
+    # Tier 2: Local ONNX Cross-Encoder (if available)
+    if classifier is not None and needs_model:
+        confirmed_by_onnx, _suppressed = classifier.filter_issues(needs_model, doc)
+        confirmed_offsets.update(i["offset"] for i in confirmed_by_onnx)
+        needs_model = []
+
+    # Tier 3: LLM validation fallback (if ONNX classifier was not used and LLM is configured)
+    if llm_client is not None and len(needs_model) >= _MIN_ISSUES_FOR_LLM:
+        interleaved = _interleave_by_type(needs_model)
+        truncated = interleaved[:_MAX_TOTAL_ISSUES]
         llm_confirmed = _validate_all(truncated, doc)
         confirmed_offsets.update(llm_confirmed)
-        # If we truncated, keep all beyond the truncation point (conservative).
-        if len(needs_llm) > _MAX_TOTAL_ISSUES:
-            for issue in needs_llm[_MAX_TOTAL_ISSUES:]:
-                confirmed_offsets.add(issue["offset"])
+        for issue in interleaved[_MAX_TOTAL_ISSUES:]:
+            confirmed_offsets.add(issue["offset"])
+    elif needs_model:
+        # If no model evaluated these, keep all (conservative fallback)
+        for issue in needs_model:
+            confirmed_offsets.add(issue["offset"])
 
-    # Reconstruct result: non-filterable + filterable issues whose offsets
-    # were confirmed by the LLM or pre-filters.
+    # Reconstruct result
     confirmed: list[dict] = list(non_filterable)
     for issue in filterable:
         if issue["offset"] in confirmed_offsets:
@@ -96,11 +107,25 @@ def filter_false_positives(
     if len(confirmed) < len(issues):
         suppressed = len(issues) - len(confirmed)
         print(
-            f"stelint: LLM filter suppressed {suppressed} false positive(s).",
+            f"stelint: False positive filter suppressed {suppressed} issue(s).",
             file=sys.stderr,
         )
 
     return confirmed
+
+
+def _interleave_by_type(issues: list[dict]) -> list[dict]:
+    """Round-robin interleave issues so truncation covers all check types."""
+    by_type: dict[str, list[dict]] = {}
+    for issue in issues:
+        by_type.setdefault(issue["type"], []).append(issue)
+    queues = list(by_type.values())
+    out: list[dict] = []
+    while any(queues):
+        for q in queues:
+            if q:
+                out.append(q.pop(0))
+    return out
 
 
 def _apply_rule_based_prefilters(
@@ -274,7 +299,8 @@ def _build_unified_prompt(issues: list[dict], doc) -> str:
             parts.append(f"{idx}. PartOfSpeech: '{token_text}' in '{sent_text}'{dep_short}")
         elif check_type == "TechnicalVerbAsNoun":
             parts.append(f"{idx}. TechnicalVerbAsNoun: '{token_text}' in '{sent_text}'{dep_short}")
-
+        elif check_type == "MissingArticles":
+            parts.append(f"{idx}. MissingArticles: '{token_text}' in '{sent_text}'{dep_short}")
     return (
         "Answer CONFIRM or FALSE_POSITIVE for each issue.\n\n"
         "Rules:\n"
@@ -282,7 +308,8 @@ def _build_unified_prompt(issues: list[dict], doc) -> str:
         "-ing after be-verb = CONFIRM.\n"
         "- ConnectingWords: unrelated topics = FALSE_POSITIVE.\n"
         "- PartOfSpeech: has dobj/nsubj/ROOT = FALSE_POSITIVE (correct verb).\n"
-        "- TechnicalVerbAsNoun: word before noun = FALSE_POSITIVE (valid modifier).\n\n" + "\n".join(parts)
+        "- TechnicalVerbAsNoun: word before noun = FALSE_POSITIVE (valid modifier).\n"
+        "- MissingArticles: plural/uncountable noun, proper name, compound, or shared article = FALSE_POSITIVE. Singular countable noun missing necessary article = CONFIRM.\n\n" + "\n".join(parts)
     )
 
 
@@ -296,11 +323,10 @@ def _validate_all(issues: list[dict], doc) -> set[int]:
         return {i["offset"] for i in issues}
 
     kept: set[int] = set()
-    # Parse lines like "1. VerbForms: ..." or "1: CONFIRM" or "1: FALSE_POSITIVE"
+    # Parse lines like "1. VerbForms: ..." or "Issue 1: CONFIRM" or "1: CONFIRM" or "1: FALSE_POSITIVE"
     for line in result.split("\n"):
         line = line.strip()
-        # Match "N: CONFIRM" or "N: FALSE_POSITIVE" at start of line.
-        match = re.match(r"^(\d+)\s*[:\-]\s*(CONFIRM|FALSE_POSITIVE)", line, re.IGNORECASE)
+        match = re.match(r"^\s*(?:Issue\s+)?(\d+)\s*[:\-.]\s*(CONFIRM|FALSE_POSITIVE)", line, re.IGNORECASE)
         if match:
             issue_num = int(match.group(1))
             verdict = match.group(2).upper()

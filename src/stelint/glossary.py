@@ -28,6 +28,7 @@ For advanced usage with namespaces and cardinality, use glossary_loader directly
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -185,10 +186,44 @@ def _load_constants(config_path: Path | None = None) -> dict[str, Any]:
                     raise ValueError("asd-ste100_base.jsonl must not be referenced in glossaries.yaml. It is always loaded first with the lowest cardinality and cannot be overridden.")
                 _load_jsonl(glossary_path, constants)
 
+    _validate_replacement_mappings(constants)
+
     return constants
 
 
 # Load constants at module import time
+# Word-to-replacement constants where a self-mapping ('word' -> 'word')
+# is a data error. CONSISTENT_STYLE_PATTERNS is intentionally excluded:
+# its self-mappings mark approved compound terms (e.g. 'nut' -> 'nut').
+_REPLACEMENT_CONSTANT_NAMES = {
+    "BRITISH_ENGLISH",
+    "FALSE_FRIENDS",
+    "NON_APPROVED_WORDS",
+    "RESTRICTED_WORDS",
+    "TECHNICAL_NOUNS_NOT_AS_VERBS",
+    "TECHNICAL_VERBS_NOT_AS_NOUNS",
+}
+
+
+def _validate_replacement_mappings(constants: dict[str, Any]) -> None:
+    """Warn on self-mapping entries in word-to-replacement constants.
+
+    A self-mapping such as NON_APPROVED_WORDS['test'] = 'test' produces
+    the meaningless message "Use 'test' instead of 'test'". Checks skip
+    such entries; this warning makes the data error visible at load time.
+    """
+    for name in sorted(_REPLACEMENT_CONSTANT_NAMES):
+        value = constants.get(name)
+        if not isinstance(value, dict):
+            continue
+        for key, replacement in value.items():
+            if isinstance(key, str) and isinstance(replacement, str) and replacement.strip().lower() == key.strip().lower():
+                print(
+                    f"stelint: warning: {name} maps '{key}' to itself. The entry has no effect.",
+                    file=sys.stderr,
+                )
+
+
 _constants = _load_constants()
 
 
@@ -339,69 +374,77 @@ def set_config_path(path: Path | None) -> None:
     _active_config_path = path
 
 
+def _update_in_place(target: Any, source: Any) -> None:
+    """Update a collection or mapping in-place if possible."""
+    if isinstance(target, dict) and isinstance(source, dict):
+        target.clear()
+        target.update(source)
+    elif isinstance(target, list) and isinstance(source, list):
+        target.clear()
+        target.extend(source)
+    elif isinstance(target, set) and isinstance(source, (set, list, tuple)):
+        target.clear()
+        target.update(source)
+
+
+def get_constant(constant_name: str, default: Any = None) -> Any:
+    """Get a constant value by name dynamically."""
+    return _constants.get(constant_name, default)
+
+
 def reload_constants():
     """
     Reload constants from asd-ste100_base.jsonl and active config.
 
-    This is useful after modifying the JSONL file or loading overrides.
+    Mutates existing exported global data structures in-place so that
+    modules that imported them directly will see updated glossary entries.
     """
     global _constants
-    _constants = _load_constants(_active_config_path)
+    new_constants = _load_constants(_active_config_path)
+    _constants.clear()
+    _constants.update(new_constants)
 
-    # Re-export all constants
-    global APPROVED_ING_FORMS, APPROVED_ING_WORDS, APPROVED_VERB_TAGS, BE_VERBS
-    global BRITISH_ENGLISH, COMMON_ABBREVIATIONS, COMMON_COMPOUND_NOUNS, COMMON_DETERMINERS
-    global COMMON_HYPHENATED_TERMS, COMMON_UNITS, CONDITIONAL_WORDS, CONNECTING_WORDS
-    global CONSISTENT_STYLE_PATTERNS, CONTRACTIONS, EXPLANATION_WORDS, FALSE_FRIENDS
-    global FORBIDDEN_MODALS, FORBIDDEN_PUNCTUATION, GENDER_PRONOUNS, HIGH_RISK_SAFETY_KEYWORDS
-    global IMPERATIVE_VERB_LEMMAS, INCONSISTENT_TECHNICAL_NOUN_PATTERNS, LATIN_ABBREVIATIONS
-    global LONG_TECHNICAL_NOUN_PATTERNS, NON_APPROVED_WORDS, NOUN_AS_VERB_PATTERNS
-    global PARENTHESES_ALLOWED_CONTEXTS, PASSIVE_EXCEPTIONS, PHRASAL_VERBS
-    global REGIONAL_SLANG_JARGON, RESTRICTED_VERB_PHRASES, RESTRICTED_WORDS
-    global RESTRICTED_WORDS_MEANING, RESTRICTED_WORDS_POS, RESTRICTED_WORD_USAGE
-    global RISK_INDICATORS, SAFETY_KEYWORDS, TECHNICAL_NOUNS_NOT_AS_VERBS, TECHNICAL_VERBS_NOT_AS_NOUNS
-    global CONJUNCTION_THAT_PATTERNS, AMBIGUOUS_PRONOUNS, AMBIGUOUS_WITH_VERB_GROUPS, AMBIGUOUS_THIS_CONTEXTS
-
-    APPROVED_ING_FORMS = _constants["APPROVED_ING_FORMS"]
-    APPROVED_ING_WORDS = _constants["APPROVED_ING_WORDS"]
-    APPROVED_VERB_TAGS = _constants["APPROVED_VERB_TAGS"]
-    BE_VERBS = _constants["BE_VERBS"]
-    BRITISH_ENGLISH = _constants["BRITISH_ENGLISH"]
-    COMMON_ABBREVIATIONS = _constants["COMMON_ABBREVIATIONS"]
-    COMMON_COMPOUND_NOUNS = _constants["COMMON_COMPOUND_NOUNS"]
-    COMMON_DETERMINERS = _constants["COMMON_DETERMINERS"]
-    COMMON_HYPHENATED_TERMS = _constants["COMMON_HYPHENATED_TERMS"]
-    COMMON_UNITS = _constants["COMMON_UNITS"]
-    CONDITIONAL_WORDS = _constants["CONDITIONAL_WORDS"]
-    CONNECTING_WORDS = _constants["CONNECTING_WORDS"]
-    CONSISTENT_STYLE_PATTERNS = _constants["CONSISTENT_STYLE_PATTERNS"]
-    CONTRACTIONS = _constants["CONTRACTIONS"]
-    EXPLANATION_WORDS = _constants["EXPLANATION_WORDS"]
-    FALSE_FRIENDS = _constants["FALSE_FRIENDS"]
-    FORBIDDEN_MODALS = _constants["FORBIDDEN_MODALS"]
-    FORBIDDEN_PUNCTUATION = _constants["FORBIDDEN_PUNCTUATION"]
-    GENDER_PRONOUNS = _constants["GENDER_PRONOUNS"]
-    HIGH_RISK_SAFETY_KEYWORDS = _constants["HIGH_RISK_SAFETY_KEYWORDS"]
-    IMPERATIVE_VERB_LEMMAS = _constants["IMPERATIVE_VERB_LEMMAS"]
-    INCONSISTENT_TECHNICAL_NOUN_PATTERNS = _constants["INCONSISTENT_TECHNICAL_NOUN_PATTERNS"]
-    LATIN_ABBREVIATIONS = _constants["LATIN_ABBREVIATIONS"]
-    LONG_TECHNICAL_NOUN_PATTERNS = _constants["LONG_TECHNICAL_NOUN_PATTERNS"]
-    NON_APPROVED_WORDS = _constants["NON_APPROVED_WORDS"]
-    NOUN_AS_VERB_PATTERNS = _constants["NOUN_AS_VERB_PATTERNS"]
-    PARENTHESES_ALLOWED_CONTEXTS = _constants["PARENTHESES_ALLOWED_CONTEXTS"]
-    PASSIVE_EXCEPTIONS = _constants["PASSIVE_EXCEPTIONS"]
-    PHRASAL_VERBS = _constants["PHRASAL_VERBS"]
-    REGIONAL_SLANG_JARGON = _constants["REGIONAL_SLANG_JARGON"]
-    RESTRICTED_VERB_PHRASES = _constants["RESTRICTED_VERB_PHRASES"]
-    RESTRICTED_WORDS = _constants["RESTRICTED_WORDS"]
-    RESTRICTED_WORDS_MEANING = _constants["RESTRICTED_WORDS_MEANING"]
-    RESTRICTED_WORDS_POS = _constants["RESTRICTED_WORDS_POS"]
-    RESTRICTED_WORD_USAGE = _constants["RESTRICTED_WORD_USAGE"]
-    RISK_INDICATORS = _constants["RISK_INDICATORS"]
-    SAFETY_KEYWORDS = _constants["SAFETY_KEYWORDS"]
-    TECHNICAL_NOUNS_NOT_AS_VERBS = _constants["TECHNICAL_NOUNS_NOT_AS_VERBS"]
-    TECHNICAL_VERBS_NOT_AS_NOUNS = _constants["TECHNICAL_VERBS_NOT_AS_NOUNS"]
-    CONJUNCTION_THAT_PATTERNS = _constants.get("CONJUNCTION_THAT_PATTERNS", [])
-    AMBIGUOUS_PRONOUNS = _constants.get("AMBIGUOUS_PRONOUNS", [])
-    AMBIGUOUS_WITH_VERB_GROUPS = _constants.get("AMBIGUOUS_WITH_VERB_GROUPS", [])
-    AMBIGUOUS_THIS_CONTEXTS = _constants.get("AMBIGUOUS_THIS_CONTEXTS", [])
+    # Re-export and mutate all in-place for backward compatibility with direct imports
+    _update_in_place(APPROVED_ING_FORMS, _constants.get("APPROVED_ING_FORMS", {}))
+    _update_in_place(APPROVED_ING_WORDS, _constants.get("APPROVED_ING_WORDS", {}))
+    _update_in_place(APPROVED_VERB_TAGS, _constants.get("APPROVED_VERB_TAGS", []))
+    _update_in_place(BE_VERBS, _constants.get("BE_VERBS", []))
+    _update_in_place(BRITISH_ENGLISH, _constants.get("BRITISH_ENGLISH", {}))
+    _update_in_place(COMMON_ABBREVIATIONS, _constants.get("COMMON_ABBREVIATIONS", []))
+    _update_in_place(COMMON_COMPOUND_NOUNS, _constants.get("COMMON_COMPOUND_NOUNS", {}))
+    _update_in_place(COMMON_DETERMINERS, _constants.get("COMMON_DETERMINERS", []))
+    _update_in_place(COMMON_HYPHENATED_TERMS, _constants.get("COMMON_HYPHENATED_TERMS", []))
+    _update_in_place(COMMON_UNITS, _constants.get("COMMON_UNITS", []))
+    _update_in_place(CONDITIONAL_WORDS, _constants.get("CONDITIONAL_WORDS", []))
+    _update_in_place(CONNECTING_WORDS, _constants.get("CONNECTING_WORDS", []))
+    _update_in_place(CONSISTENT_STYLE_PATTERNS, _constants.get("CONSISTENT_STYLE_PATTERNS", []))
+    _update_in_place(CONTRACTIONS, _constants.get("CONTRACTIONS", {}))
+    _update_in_place(EXPLANATION_WORDS, _constants.get("EXPLANATION_WORDS", []))
+    _update_in_place(FALSE_FRIENDS, _constants.get("FALSE_FRIENDS", {}))
+    _update_in_place(FORBIDDEN_MODALS, _constants.get("FORBIDDEN_MODALS", []))
+    _update_in_place(FORBIDDEN_PUNCTUATION, _constants.get("FORBIDDEN_PUNCTUATION", []))
+    _update_in_place(GENDER_PRONOUNS, _constants.get("GENDER_PRONOUNS", {}))
+    _update_in_place(HIGH_RISK_SAFETY_KEYWORDS, _constants.get("HIGH_RISK_SAFETY_KEYWORDS", []))
+    _update_in_place(IMPERATIVE_VERB_LEMMAS, _constants.get("IMPERATIVE_VERB_LEMMAS", []))
+    _update_in_place(INCONSISTENT_TECHNICAL_NOUN_PATTERNS, _constants.get("INCONSISTENT_TECHNICAL_NOUN_PATTERNS", []))
+    _update_in_place(LATIN_ABBREVIATIONS, _constants.get("LATIN_ABBREVIATIONS", {}))
+    _update_in_place(LONG_TECHNICAL_NOUN_PATTERNS, _constants.get("LONG_TECHNICAL_NOUN_PATTERNS", []))
+    _update_in_place(NON_APPROVED_WORDS, _constants.get("NON_APPROVED_WORDS", {}))
+    _update_in_place(NOUN_AS_VERB_PATTERNS, _constants.get("NOUN_AS_VERB_PATTERNS", []))
+    _update_in_place(PARENTHESES_ALLOWED_CONTEXTS, _constants.get("PARENTHESES_ALLOWED_CONTEXTS", []))
+    _update_in_place(PASSIVE_EXCEPTIONS, _constants.get("PASSIVE_EXCEPTIONS", []))
+    _update_in_place(PHRASAL_VERBS, _constants.get("PHRASAL_VERBS", {}))
+    _update_in_place(REGIONAL_SLANG_JARGON, _constants.get("REGIONAL_SLANG_JARGON", {}))
+    _update_in_place(RESTRICTED_VERB_PHRASES, _constants.get("RESTRICTED_VERB_PHRASES", {}))
+    _update_in_place(RESTRICTED_WORDS, _constants.get("RESTRICTED_WORDS", {}))
+    _update_in_place(RESTRICTED_WORDS_MEANING, _constants.get("RESTRICTED_WORDS_MEANING", {}))
+    _update_in_place(RESTRICTED_WORDS_POS, _constants.get("RESTRICTED_WORDS_POS", {}))
+    _update_in_place(RESTRICTED_WORD_USAGE, _constants.get("RESTRICTED_WORD_USAGE", {}))
+    _update_in_place(RISK_INDICATORS, _constants.get("RISK_INDICATORS", []))
+    _update_in_place(SAFETY_KEYWORDS, _constants.get("SAFETY_KEYWORDS", []))
+    _update_in_place(TECHNICAL_NOUNS_NOT_AS_VERBS, _constants.get("TECHNICAL_NOUNS_NOT_AS_VERBS", {}))
+    _update_in_place(TECHNICAL_VERBS_NOT_AS_NOUNS, _constants.get("TECHNICAL_VERBS_NOT_AS_NOUNS", {}))
+    _update_in_place(CONJUNCTION_THAT_PATTERNS, _constants.get("CONJUNCTION_THAT_PATTERNS", []))
+    _update_in_place(AMBIGUOUS_PRONOUNS, _constants.get("AMBIGUOUS_PRONOUNS", []))
+    _update_in_place(AMBIGUOUS_WITH_VERB_GROUPS, _constants.get("AMBIGUOUS_WITH_VERB_GROUPS", []))
+    _update_in_place(AMBIGUOUS_THIS_CONTEXTS, _constants.get("AMBIGUOUS_THIS_CONTEXTS", []))

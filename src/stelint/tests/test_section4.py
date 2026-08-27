@@ -94,11 +94,19 @@ class TestCheckMissingArticles:
         issues = check_missing_articles(doc)
         assert isinstance(issues, list)
 
-    def test_with_article(self, nlp_model):
-        """Test with article."""
+    def test_missing_article_on_direct_object_flagged(self, nlp_model):
+        """Test that missing article on direct object is flagged (true positive)."""
+        doc = nlp_model("Open valve.")
+        issues = check_missing_articles(doc)
+        assert len(issues) == 1
+        assert issues[0]["type"] == "MissingArticles"
+        assert "valve" in issues[0]["message"]
+
+    def test_with_article_clean(self, nlp_model):
+        """Test that noun with an article is clean."""
         doc = nlp_model("Open the valve.")
         issues = check_missing_articles(doc)
-        assert isinstance(issues, list)
+        assert issues == []
 
 
 class TestCheckArticleUsage:

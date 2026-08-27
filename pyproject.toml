@@ -19,6 +19,7 @@ dependencies = [
     "nltk",
     "sense2vec>=1.0.0",
     "openai",
+    "onnxruntime>=1.29.0",
 ]
 
 [project.scripts]

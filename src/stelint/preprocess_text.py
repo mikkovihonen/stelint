@@ -231,7 +231,7 @@ def _get_markdown_blocks(md: str) -> list[tuple[int, int, str]]:
 
     # Collect emphasis markers (bold, italic, strikethrough).
     # Replace markers with spaces to remove markdown formatting while keeping
-    # the inner text visible. This prevents prosecco from counting special
+    # the inner text visible. This prevents stelint from counting special
     # characters as words in multi-word noun checks.
     # Uses a generic function to collect markers with their types.
     _collect_emphasis_markers(md, blocks)

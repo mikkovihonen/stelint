@@ -27,6 +27,7 @@ from .shared import (
     _get_first_content_word,
     _get_sentence_depth,
     _has_connecting_word,
+    _has_determiner_or_possessive,
     _is_common_pattern_without_article,
 )
 
@@ -230,8 +231,8 @@ def check_missing_articles(doc):
     correctly and do not omit them to make the text shorter.
 
     Uses spaCy features:
-    - token.pos_ to identify nouns (NOUN, PROPN)
-    - token.dep_ to check for determiners (det)
+    - token.pos_ to identify nouns (NOUN)
+    - token.dep_ to check for determiners and modifiers
     - Dependency parsing to verify article usage
     - token.head to check noun relationships
     """
@@ -239,25 +240,25 @@ def check_missing_articles(doc):
     seen = set()
 
     for token in doc:
-        # Check for nouns that don't have a determiner
-        if token.pos_ == "NOUN" and token.dep_ != "compound":
-            # Check if the noun has a determiner (article or demonstrative)
-            has_determiner = any(c.dep_ == "det" and c.pos_ == "DET" for c in token.children)
-
+        # Check for nouns
+        if token.pos_ in ("NOUN", "PROPN"):
             # Skip proper nouns (these don't need articles)
-            if token.pos_ == "PROPN":
+            if token.pos_ == "PROPN" or token.tag_ in ("NNP", "NNPS"):
                 continue
 
-            # Skip if the noun is part of a technical noun
-            if token.dep_ in ("compound", "nn", "appos"):
+            # Skip if the noun has a determiner or possessive
+            if _has_determiner_or_possessive(token):
+                continue
+
+            # Skip if the noun is part of a compound noun or modifier
+            if token.dep_ in ("compound", "nn", "appos", "amod", "npadvmod", "poss", "meta"):
                 continue
 
             # Skip if the noun is in a common pattern that doesn't need articles
             if _is_common_pattern_without_article(token, doc):
                 continue
 
-            # If the noun doesn't have a determiner and is not a proper noun, flag it
-            if not has_determiner and token.idx not in seen:
+            if token.idx not in seen:
                 seen.add(token.idx)
                 issues.append(
                     {

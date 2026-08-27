@@ -37,9 +37,9 @@ class TestFilterFalsePositives:
 
         from stelint.checks_llm_fp import filter_false_positives
 
-        doc = self.nlp("The test.")
+        doc = self.nlp("The test sentence.")
         issues = [
-            {"type": "MissingArticles", "message": "test", "offset": 4, "length": 5},
+            {"type": "SentenceLength", "message": "test", "offset": 4, "length": 5},
             {"type": "VerbTenses", "message": "test2", "offset": 0, "length": 3},
         ]
         result = filter_false_positives(issues, doc)

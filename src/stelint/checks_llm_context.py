@@ -52,9 +52,11 @@ def classify_sentences(doc) -> dict[int, str]:
     prompt = _build_classification_prompt(sentences)
 
     try:
+        # Budget: one short label per sentence plus reasoning headroom.
+        # Capping this bounds call duration on reasoning models.
         result = llm_chat(
             [{"role": "user", "content": prompt}],
-            max_tokens=4000,
+            max_tokens=1500,
         )
     except Exception as e:
         print(f"stelint: LLM context classification failed: {e}", file=sys.stderr)

@@ -438,12 +438,16 @@ def check_non_approved_words(doc):
         word = token.text.lower()
         if word in NON_APPROVED_WORDS:
             replacement = NON_APPROVED_WORDS[word]
+            # Skip self-mapping data errors (e.g. 'test' -> 'test'):
+            # the message would name the same word twice.
+            if replacement is not None and replacement.strip().lower() == word:
+                continue
             if replacement is None:
                 # No direct alternative, use different sentence construction
                 issues.append(
                     {
                         "type": "NonApprovedWords",
-                        "message": f"Word '{word}' is not approved in STE. Use a different sentence construction. To allow '{word}' as a technical term, run: /prosecco-add-to-glossary '{word}'",
+                        "message": f"Word '{word}' is not approved in STE. Use a different sentence construction. To allow '{word}' as a technical term, run: python -m stelint.add_to_glossary --key '{word}' --remove",
                         "offset": token.idx,
                         "length": len(token.text),
                     }
@@ -452,7 +456,7 @@ def check_non_approved_words(doc):
                 issues.append(
                     {
                         "type": "NonApprovedWords",
-                        "message": f"Use '{replacement}' instead of '{word}'. To allow '{word}' with replacement '{replacement}', run: /prosecco-add-to-glossary '{word}' --value '{replacement}'",
+                        "message": f"Use '{replacement}' instead of '{word}'. To allow '{word}' with replacement '{replacement}', run: python -m stelint.add_to_glossary --key '{word}' --value '{replacement}'",
                         "offset": token.idx,
                         "length": len(token.text),
                     }
